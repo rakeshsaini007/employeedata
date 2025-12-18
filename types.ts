@@ -30,4 +30,5 @@ export interface ValidationErrors {
   panNumber?: string;
   mobileNumber?: string;
   gmailId?: string;
+  hindiName?: string;
 }

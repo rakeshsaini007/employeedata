@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Calendar, Lock, LogOut, ShieldCheck, ChevronRight, Fingerprint } from 'lucide-react';
+import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Calendar, Lock, LogOut, ShieldCheck, ChevronRight, Fingerprint, Type } from 'lucide-react';
 import { Input } from './components/Input';
 import { Toast } from './components/Toast';
 import { loginEmployee, saveEmployee } from './services/api';
@@ -42,6 +42,10 @@ function App() {
       case 'panNumber': return !REGEX.PAN.test(value) ? 'Use AAAAA0000A' : undefined;
       case 'mobileNumber': return !REGEX.MOBILE.test(value) ? 'Invalid Indian mobile' : undefined;
       case 'gmailId': return !REGEX.GMAIL.test(value) ? 'Must be @gmail.com' : undefined;
+      case 'hindiName': 
+        // Simple check for Devanagari characters or space
+        const hindiRegex = /^[\u0900-\u097F\s]+$/;
+        return value && !hindiRegex.test(value) ? 'Please enter only Hindi characters' : undefined;
       default: return undefined;
     }
   };
@@ -75,7 +79,7 @@ function App() {
     e.preventDefault();
     const newErrors: ValidationErrors = {};
     let hasError = false;
-    (['adharNumber', 'epicNumber', 'panNumber', 'mobileNumber', 'gmailId'] as const).forEach(field => {
+    (['adharNumber', 'epicNumber', 'panNumber', 'mobileNumber', 'gmailId', 'hindiName'] as const).forEach(field => {
         const error = validateField(field, data[field]);
         if (error || !data[field]) {
             newErrors[field] = error || "Required";
@@ -207,7 +211,7 @@ function App() {
                       <div>
                         <p className="text-indigo-400/60 text-xs font-bold uppercase tracking-widest mb-1">Employee Name</p>
                         <h3 className="text-2xl font-bold text-white leading-tight">{data.employeeName}</h3>
-                        <p className="text-lg font-medium text-indigo-300 font-hindi mt-1">{data.hindiName}</p>
+                        <p className="text-lg font-medium text-indigo-300 font-hindi mt-1 min-h-[1.75rem]">{data.hindiName || '—'}</p>
                       </div>
 
                       <div className="flex items-center gap-8 border-t border-white/10 pt-8">
@@ -240,7 +244,31 @@ function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
+                    {/* Basic Info (Hindi Name) */}
                     <div className="md:col-span-2 mb-6">
+                      <div className="flex items-center gap-2 text-slate-950 font-black text-sm uppercase tracking-widest">
+                         <Type className="w-5 h-5 text-indigo-600" /> Basic Information
+                      </div>
+                      <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Input
+                        label="Employee Name (Hindi)"
+                        name="hindiName"
+                        value={data.hindiName}
+                        onChange={handleChange}
+                        placeholder="नाम हिंदी में लिखें"
+                        error={errors.hindiName}
+                        isValid={!!data.hindiName && !errors.hindiName}
+                        className="font-hindi text-lg"
+                      />
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 ml-1">
+                        Use Hindi keyboard input for this field.
+                      </p>
+                    </div>
+
+                    <div className="md:col-span-2 mb-6 mt-4">
                       <div className="flex items-center gap-2 text-slate-950 font-black text-sm uppercase tracking-widest">
                          <CreditCard className="w-5 h-5 text-indigo-600" /> Statutory Details
                       </div>
@@ -333,8 +361,9 @@ function App() {
         )}
       </div>
 
-      <footer className="mt-12 text-slate-400 font-bold text-xs uppercase tracking-widest">
-        HRMS Data Protocol V4.2 • Secure Cloud Storage
+      <footer className="mt-12 text-slate-400 font-bold text-xs uppercase tracking-widest text-center">
+        HRMS Data Protocol V4.2 • Secure Cloud Storage<br/>
+        <span className="opacity-50">Department of Personnel & IT</span>
       </footer>
     </div>
   );
