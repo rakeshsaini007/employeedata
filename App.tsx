@@ -259,12 +259,6 @@ function App() {
                           isValid={!!data.hindiName && !errors.hindiName}
                           className="font-hindi text-2xl py-5 border-none focus:ring-0 shadow-none bg-transparent"
                         />
-                        <div className="flex items-start gap-2 mt-2 ml-1">
-                          <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-1.5"></div>
-                          <p className="text-sm text-slate-600 font-bold leading-tight">
-                            Changing this field will automatically update the Master List in the Google Sheet. Use a Hindi Keyboard.
-                          </p>
-                        </div>
                       </div>
                     </div>
 
