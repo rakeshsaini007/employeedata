@@ -43,7 +43,6 @@ function App() {
       case 'mobileNumber': return !REGEX.MOBILE.test(value) ? 'Invalid Indian mobile' : undefined;
       case 'gmailId': return !REGEX.GMAIL.test(value) ? 'Must be @gmail.com' : undefined;
       case 'hindiName': 
-        // Simple check for Devanagari characters or space
         const hindiRegex = /^[\u0900-\u097F\s]+$/;
         return value && !hindiRegex.test(value) ? 'Please enter only Hindi characters' : undefined;
       default: return undefined;
@@ -89,7 +88,7 @@ function App() {
 
     if (hasError) {
         setErrors(newErrors);
-        setToast({ message: 'Incomplete or invalid fields detected.', type: 'error' });
+        setToast({ message: 'Validation failed. Please correct the fields.', type: 'error' });
         return;
     }
 
@@ -110,7 +109,6 @@ function App() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="w-full max-w-6xl relative z-10">
-        {/* Navigation / Header */}
         <header className="flex flex-col items-center mb-12 animate-slideUp">
           <div className="w-16 h-16 bg-white rounded-2xl shadow-2xl flex items-center justify-center mb-6 border border-slate-100 group hover:rotate-6 transition-transform">
             <ShieldCheck className="w-8 h-8 text-indigo-600" />
@@ -191,7 +189,6 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Digital ID Panel */}
               <div className="lg:col-span-4">
                 <div className="bg-slate-950 rounded-[3rem] p-1 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]">
                   <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 rounded-[2.8rem] p-10 text-white border border-white/10 relative overflow-hidden">
@@ -211,7 +208,7 @@ function App() {
                       <div>
                         <p className="text-indigo-400/60 text-xs font-bold uppercase tracking-widest mb-1">Employee Name</p>
                         <h3 className="text-2xl font-bold text-white leading-tight">{data.employeeName}</h3>
-                        <p className="text-lg font-medium text-indigo-300 font-hindi mt-1 min-h-[1.75rem]">{data.hindiName || '—'}</p>
+                        <p className="text-xl font-bold text-indigo-300 font-hindi mt-1 min-h-[1.75rem] bg-white/5 inline-block px-3 py-1 rounded-lg border border-white/5">{data.hindiName || 'नाम दर्ज करें'}</p>
                       </div>
 
                       <div className="flex items-center gap-8 border-t border-white/10 pt-8">
@@ -233,7 +230,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Data Center Panel */}
               <div className="lg:col-span-8">
                 <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] p-10 md:p-14 shadow-2xl border border-white">
                   <div className="flex items-center gap-4 mb-10">
@@ -244,28 +240,32 @@ function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
-                    {/* Basic Info (Hindi Name) */}
                     <div className="md:col-span-2 mb-6">
                       <div className="flex items-center gap-2 text-slate-950 font-black text-sm uppercase tracking-widest">
-                         <Type className="w-5 h-5 text-indigo-600" /> Basic Information
+                         <Type className="w-5 h-5 text-indigo-600" /> Identity Details (Hindi Font)
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
 
                     <div className="md:col-span-2">
-                      <Input
-                        label="Employee Name (Hindi)"
-                        name="hindiName"
-                        value={data.hindiName}
-                        onChange={handleChange}
-                        placeholder="नाम हिंदी में लिखें"
-                        error={errors.hindiName}
-                        isValid={!!data.hindiName && !errors.hindiName}
-                        className="font-hindi text-lg"
-                      />
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 ml-1">
-                        Use Hindi keyboard input for this field.
-                      </p>
+                      <div className="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-indigo-100 mb-6 group focus-within:border-indigo-500 transition-all">
+                        <Input
+                          label="Employee Name (Hindi Only)"
+                          name="hindiName"
+                          value={data.hindiName}
+                          onChange={handleChange}
+                          placeholder="अपना नाम हिंदी में टाइप करें"
+                          error={errors.hindiName}
+                          isValid={!!data.hindiName && !errors.hindiName}
+                          className="font-hindi text-2xl py-5 border-none focus:ring-0 shadow-none bg-transparent"
+                        />
+                        <div className="flex items-start gap-2 mt-2 ml-1">
+                          <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-1.5"></div>
+                          <p className="text-sm text-slate-600 font-bold leading-tight">
+                            Changing this field will automatically update the Master List in the Google Sheet. Use a Hindi Keyboard.
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="md:col-span-2 mb-6 mt-4">
@@ -348,7 +348,7 @@ function App() {
                         <Loader2 className="w-7 h-7 animate-spin" />
                       ) : (
                         <>
-                          {isExisting ? 'Update Global Record' : 'Create New Entry'}
+                          {isExisting ? 'Sync & Update Records' : 'Save New Record'}
                           <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                         </>
                       )}
@@ -363,7 +363,7 @@ function App() {
 
       <footer className="mt-12 text-slate-400 font-bold text-xs uppercase tracking-widest text-center">
         HRMS Data Protocol V4.2 • Secure Cloud Storage<br/>
-        <span className="opacity-50">Department of Personnel & IT</span>
+        <span className="opacity-50">Master Synchronization Enabled for Hindi Records</span>
       </footer>
     </div>
   );

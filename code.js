@@ -7,7 +7,7 @@
  * 3. Paste this code into Code.gs.
  * 4. Click Deploy > New Deployment.
  * 5. Select type: "Web app".
- * 6. Description: "v2".
+ * 6. Description: "v3 - Sync Hindi Name to List".
  * 7. Execute as: "Me".
  * 8. Who has access: "Anyone".
  * 9. Click Deploy.
@@ -32,7 +32,7 @@ function doPost(e) {
     if (action === "login") {
       return handleLogin(payload.hrmsId, payload.password, sheetData, sheetList);
     } else if (action === "save") {
-      return handleSave(payload.data, sheetData);
+      return handleSave(payload.data, sheetData, sheetList);
     } else {
       throw new Error("Invalid action");
     }
@@ -116,12 +116,12 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   });
 }
 
-function handleSave(data, sheetData) {
+function handleSave(data, sheetData, sheetList) {
   const hrmsIdStr = String(data.hrmsId).trim();
   const dataValues = sheetData.getDataRange().getValues();
   let rowIndex = -1;
 
-  // Check if we are updating an existing row
+  // 1. Update/Append to 'Data' sheet
   for (let i = 1; i < dataValues.length; i++) {
     if (String(dataValues[i][0]).trim() === hrmsIdStr) {
       rowIndex = i + 1; // 1-based index
@@ -143,14 +143,22 @@ function handleSave(data, sheetData) {
   ];
 
   if (rowIndex !== -1) {
-    // Update
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-    return createSuccessResponse({ message: "Data updated successfully!" });
   } else {
-    // Append
     sheetData.appendRow(rowData);
-    return createSuccessResponse({ message: "Data saved successfully!" });
   }
+
+  // 2. Sync Hindi Name back to 'List' sheet automatically
+  const listValues = sheetList.getDataRange().getValues();
+  for (let i = 1; i < listValues.length; i++) {
+    if (String(listValues[i][0]).trim() === hrmsIdStr) {
+      // Column index 3 is 'Hindi Name' in the List sheet (headers: ID, Name, Hindi, Design, DOB)
+      sheetList.getRange(i + 1, 3).setValue(data.hindiName);
+      break;
+    }
+  }
+
+  return createSuccessResponse({ message: "Record synchronized successfully!" });
 }
 
 function createSuccessResponse(payload) {
