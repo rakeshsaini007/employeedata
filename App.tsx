@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Eye, EyeOff, Lock } from 'lucide-react';
+import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Calendar, Lock } from 'lucide-react';
 import { Input } from './components/Input';
 import { Toast } from './components/Toast';
 import { loginEmployee, saveEmployee } from './services/api';
@@ -21,8 +21,7 @@ const INITIAL_DATA: EmployeeData = {
 
 function App() {
   const [hrmsIdLogin, setHrmsIdLogin] = useState('');
-  const [passwordLogin, setPasswordLogin] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [passwordDate, setPasswordDate] = useState(''); // Stores YYYY-MM-DD from input
   
   const [data, setData] = useState<EmployeeData>(INITIAL_DATA);
   const [isExisting, setIsExisting] = useState(false);
@@ -30,6 +29,13 @@ function App() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [step, setStep] = useState<'login' | 'form'>('login');
+
+  // Helper to convert YYYY-MM-DD to DD-MM-YYYY
+  const formatToBackendDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
+  };
 
   const validateField = (name: keyof EmployeeData, value: string): string | undefined => {
     switch (name) {
@@ -50,15 +56,18 @@ function App() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hrmsIdLogin || !passwordLogin) {
-      setToast({ message: 'Please enter both User ID and Password.', type: 'error' });
+    if (!hrmsIdLogin || !passwordDate) {
+      setToast({ message: 'Please enter both User ID and select your DOB.', type: 'error' });
       return;
     }
 
     setLoading(true);
     
+    // Convert YYYY-MM-DD to DD-MM-YYYY for backend check
+    const formattedPassword = formatToBackendDate(passwordDate);
+    
     // Attempt Login
-    const response = await loginEmployee(hrmsIdLogin, passwordLogin);
+    const response = await loginEmployee(hrmsIdLogin, formattedPassword);
     
     setLoading(false);
 
@@ -130,7 +139,7 @@ function App() {
     setStep('login');
     setData(INITIAL_DATA);
     setHrmsIdLogin('');
-    setPasswordLogin('');
+    setPasswordDate('');
     setErrors({});
   };
 
@@ -170,7 +179,7 @@ function App() {
             <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl shadow-indigo-100 border border-white">
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-slate-800">Welcome Back</h2>
-                <p className="text-slate-500 text-sm mt-2">Login with your HRMS ID and DOB</p>
+                <p className="text-slate-500 text-sm mt-2">Login with your HRMS ID and Date of Birth</p>
               </div>
 
               <form onSubmit={handleLogin} className="flex flex-col gap-5">
@@ -181,7 +190,7 @@ function App() {
                   <div className="relative">
                     <input
                       id="userId"
-                      type="text" // numeric string
+                      type="text"
                       value={hrmsIdLogin}
                       onChange={(e) => setHrmsIdLogin(e.target.value)}
                       placeholder="Enter HRMS ID"
@@ -194,33 +203,25 @@ function App() {
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                    Password
+                    Date of Birth (Password)
                   </label>
                   <div className="relative">
                     <input
                       id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={passwordLogin}
-                      onChange={(e) => setPasswordLogin(e.target.value)}
-                      placeholder="DOB (DD-MM-YYYY)"
-                      className="w-full pl-11 pr-12 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-medium outline-none focus:border-indigo-500 transition-colors"
+                      type="date"
+                      value={passwordDate}
+                      onChange={(e) => setPasswordDate(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-medium outline-none focus:border-indigo-500 transition-colors appearance-none cursor-pointer"
                       required
                     />
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                   </div>
-                  <p className="text-xs text-slate-400 mt-2 text-right">Format: DD-MM-YYYY</p>
+                  <p className="text-xs text-slate-400 mt-2 text-right">Select your date from the calendar</p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !hrmsIdLogin || !passwordLogin}
+                  disabled={loading || !hrmsIdLogin || !passwordDate}
                   className="mt-2 w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
