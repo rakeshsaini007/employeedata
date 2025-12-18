@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Calendar, Lock } from 'lucide-react';
+import { LogIn, Save, Edit, Loader2, UserCheck, Smartphone, Mail, CreditCard, Calendar, Lock, LogOut, ShieldCheck, ChevronRight, Fingerprint } from 'lucide-react';
 import { Input } from './components/Input';
 import { Toast } from './components/Toast';
 import { loginEmployee, saveEmployee } from './services/api';
@@ -21,8 +21,7 @@ const INITIAL_DATA: EmployeeData = {
 
 function App() {
   const [hrmsIdLogin, setHrmsIdLogin] = useState('');
-  const [passwordDate, setPasswordDate] = useState(''); // Stores YYYY-MM-DD from input
-  
+  const [passwordDate, setPasswordDate] = useState('');
   const [data, setData] = useState<EmployeeData>(INITIAL_DATA);
   const [isExisting, setIsExisting] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,6 @@ function App() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [step, setStep] = useState<'login' | 'form'>('login');
 
-  // Helper to convert YYYY-MM-DD to DD-MM-YYYY
   const formatToBackendDate = (dateStr: string) => {
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
@@ -39,87 +37,55 @@ function App() {
 
   const validateField = (name: keyof EmployeeData, value: string): string | undefined => {
     switch (name) {
-      case 'adharNumber':
-        return !REGEX.ADHAR.test(value) ? 'Adhar must be exactly 12 digits' : undefined;
-      case 'epicNumber':
-        return !REGEX.EPIC.test(value) ? 'Alpha-numeric with / or \\ only' : undefined;
-      case 'panNumber':
-        return !REGEX.PAN.test(value) ? 'Format: AAAAA1234A (5 Caps, 4 Digits, 1 Cap)' : undefined;
-      case 'mobileNumber':
-        return !REGEX.MOBILE.test(value) ? 'Invalid Indian mobile number' : undefined;
-      case 'gmailId':
-        return !REGEX.GMAIL.test(value) ? 'Must be a valid @gmail.com address' : undefined;
-      default:
-        return undefined;
+      case 'adharNumber': return !REGEX.ADHAR.test(value) ? 'Enter 12 digits' : undefined;
+      case 'epicNumber': return !REGEX.EPIC.test(value) ? 'Invalid format' : undefined;
+      case 'panNumber': return !REGEX.PAN.test(value) ? 'Use AAAAA0000A' : undefined;
+      case 'mobileNumber': return !REGEX.MOBILE.test(value) ? 'Invalid Indian mobile' : undefined;
+      case 'gmailId': return !REGEX.GMAIL.test(value) ? 'Must be @gmail.com' : undefined;
+      default: return undefined;
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hrmsIdLogin || !passwordDate) {
-      setToast({ message: 'Please enter both User ID and select your DOB.', type: 'error' });
-      return;
-    }
-
     setLoading(true);
-    
-    // Convert YYYY-MM-DD to DD-MM-YYYY for backend check
     const formattedPassword = formatToBackendDate(passwordDate);
-    
-    // Attempt Login
     const response = await loginEmployee(hrmsIdLogin, formattedPassword);
-    
     setLoading(false);
 
     if (response.status === 'success' && response.data) {
       setData(response.data);
       setIsExisting(response.exists || false);
       setStep('form');
-      setToast({ message: 'Login successful!', type: 'success' });
+      setToast({ message: 'Authentication Successful', type: 'success' });
     } else {
-      setToast({ message: response.message || 'Login failed. Check credentials.', type: 'error' });
+      setToast({ message: response.message || 'Verification Failed', type: 'error' });
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Special handling for uppercase enforcement on PAN and EPIC
-    let formattedValue = value;
-    if (name === 'panNumber' || name === 'epicNumber') {
-      formattedValue = value.toUpperCase();
-    }
-
+    let formattedValue = (name === 'panNumber' || name === 'epicNumber') ? value.toUpperCase() : value;
     setData(prev => ({ ...prev, [name]: formattedValue }));
-
     const error = validateField(name as keyof EmployeeData, formattedValue);
-    setErrors(prev => ({
-      ...prev,
-      [name]: error
-    }));
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Final Validation Check
     const newErrors: ValidationErrors = {};
     let hasError = false;
-    
     (['adharNumber', 'epicNumber', 'panNumber', 'mobileNumber', 'gmailId'] as const).forEach(field => {
         const error = validateField(field, data[field]);
-        if (error) {
-            newErrors[field] = error;
+        if (error || !data[field]) {
+            newErrors[field] = error || "Required";
             hasError = true;
-        }
-        if(!data[field]) {
-             newErrors[field] = "This field is required";
-             hasError = true;
         }
     });
 
     if (hasError) {
         setErrors(newErrors);
-        setToast({ message: 'Please fix validation errors before saving.', type: 'error' });
+        setToast({ message: 'Incomplete or invalid fields detected.', type: 'error' });
         return;
     }
 
@@ -129,181 +95,156 @@ function App() {
 
     if (response.status === 'success') {
       setToast({ message: response.message, type: 'success' });
-      setIsExisting(true); // Now it exists in DB
+      setIsExisting(true);
     } else {
       setToast({ message: response.message, type: 'error' });
     }
   };
 
-  const handleLogout = () => {
-    setStep('login');
-    setData(INITIAL_DATA);
-    setHrmsIdLogin('');
-    setPasswordDate('');
-    setErrors({});
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-700 pb-12">
-      {/* Background decoration */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-indigo-200/30 rounded-[100%] blur-3xl opacity-50" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-200/30 rounded-[100%] blur-3xl opacity-50" />
-      </div>
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-start py-8 px-4">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
-        />
-      )}
-
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12">
-        {/* Header */}
-        <header className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-xl shadow-indigo-100 mb-6">
-            <UserCheck className="w-10 h-10 text-indigo-600" />
+      <div className="w-full max-w-6xl relative z-10">
+        {/* Navigation / Header */}
+        <header className="flex flex-col items-center mb-12 animate-slideUp">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-2xl flex items-center justify-center mb-6 border border-slate-100 group hover:rotate-6 transition-transform">
+            <ShieldCheck className="w-8 h-8 text-indigo-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
-            Employee <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Portal</span>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-950 tracking-tight text-center">
+            Employee <span className="text-indigo-600">Executive</span> Portal
           </h1>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            Securely manage and update your HRMS records with real-time validation.
+          <p className="mt-4 text-slate-600 font-medium text-lg text-center max-w-xl">
+            Identity management system for HRMS verified professionals.
           </p>
         </header>
 
         {step === 'login' ? (
-          /* Login Section */
-          <div className="max-w-md mx-auto">
-            <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl shadow-indigo-100 border border-white">
-              <div className="mb-6 text-center">
-                <h2 className="text-2xl font-bold text-slate-800">Welcome Back</h2>
-                <p className="text-slate-500 text-sm mt-2">Login with your HRMS ID and Date of Birth</p>
+          <div className="max-w-md mx-auto animate-slideUp" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white p-10 relative">
+              <div className="absolute top-0 right-10 -translate-y-1/2 w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                <Lock className="w-6 h-6 text-white" />
+              </div>
+              
+              <div className="mb-10">
+                <h2 className="text-3xl font-bold text-slate-950">Secure Login</h2>
+                <div className="h-1 w-12 bg-indigo-600 mt-2 rounded-full"></div>
               </div>
 
-              <form onSubmit={handleLogin} className="flex flex-col gap-5">
+              <form onSubmit={handleLogin} className="space-y-6">
                 <div>
-                  <label htmlFor="userId" className="block text-sm font-semibold text-slate-700 mb-2">
-                    User ID (HRMS Code)
-                  </label>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">HRMS Code</label>
                   <div className="relative">
                     <input
-                      id="userId"
                       type="text"
                       value={hrmsIdLogin}
                       onChange={(e) => setHrmsIdLogin(e.target.value)}
-                      placeholder="Enter HRMS ID"
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-medium outline-none focus:border-indigo-500 transition-colors"
+                      placeholder="Enter ID"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-950 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                       required
                     />
-                    <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                    Date of Birth (Password)
-                  </label>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">Date of Birth</label>
                   <div className="relative">
                     <input
-                      id="password"
                       type="date"
                       value={passwordDate}
                       onChange={(e) => setPasswordDate(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-medium outline-none focus:border-indigo-500 transition-colors appearance-none cursor-pointer"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-950 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                       required
                     />
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                   </div>
-                  <p className="text-xs text-slate-400 mt-2 text-right">Select your date from the calendar</p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !hrmsIdLogin || !passwordDate}
-                  className="mt-2 w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full py-5 bg-slate-950 hover:bg-indigo-700 text-white font-black text-lg rounded-2xl shadow-2xl transition-all transform active:scale-95 flex items-center justify-center gap-3 disabled:bg-slate-300"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Authenticating...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-5 h-5" /> Login
-                    </>
-                  )}
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><LogIn className="w-6 h-6" /> Authenticate Account</>}
                 </button>
               </form>
             </div>
           </div>
         ) : (
-          /* Form Section */
-          <div className="animate-fadeIn">
-             <div className="flex justify-between items-center mb-6">
-                <button 
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors"
-                >
-                  <LogOutIcon className="w-4 h-4" /> Logout
-                </button>
-                <div className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                  Logged in as {data.hrmsId}
-                </div>
-             </div>
+          <div className="animate-slideUp">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+              <button 
+                onClick={() => setStep('login')}
+                className="px-6 py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl border-2 border-slate-200 flex items-center gap-2 shadow-sm transition-all"
+              >
+                <LogOut className="w-5 h-5" /> Log Out
+              </button>
+              <div className="flex items-center gap-3 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-indigo-100">
+                <ShieldCheck className="w-5 h-5" />
+                Verified Session: {data.hrmsId}
+              </div>
+            </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
-              {/* Read Only Card */}
-              <div className="lg:col-span-1">
-                <div className="sticky top-8 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-2xl shadow-slate-300">
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-2xl font-bold">{data.employeeName.charAt(0)}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-400 font-medium">HRMS ID</p>
-                      <p className="text-2xl font-mono tracking-wider">{data.hrmsId}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Full Name</p>
-                      <h3 className="text-xl font-semibold">{data.employeeName}</h3>
-                      <p className="text-lg font-medium text-slate-300 font-hindi">{data.hindiName}</p>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Digital ID Panel */}
+              <div className="lg:col-span-4">
+                <div className="bg-slate-950 rounded-[3rem] p-1 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]">
+                  <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 rounded-[2.8rem] p-10 text-white border border-white/10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
                     
-                    <div className="h-px bg-white/10" />
+                    <div className="flex items-center justify-between mb-12">
+                      <div className="w-20 h-20 bg-indigo-600/30 rounded-3xl border border-indigo-400/30 flex items-center justify-center backdrop-blur-md">
+                        <UserCheck className="w-10 h-10 text-indigo-300" />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-indigo-400 text-xs font-black uppercase tracking-tighter">Identity Token</p>
+                        <p className="text-2xl font-black font-mono tracking-widest">#{data.hrmsId}</p>
+                      </div>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-8">
                       <div>
-                        <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Designation</p>
-                        <p className="text-base font-medium">{data.designation}</p>
+                        <p className="text-indigo-400/60 text-xs font-bold uppercase tracking-widest mb-1">Employee Designation</p>
+                        <h3 className="text-2xl font-bold text-white leading-tight">{data.employeeName}</h3>
+                        <p className="text-lg font-medium text-indigo-300 font-hindi mt-1">{data.hindiName}</p>
                       </div>
-                      <div>
-                        <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">DOB</p>
-                        <p className="text-base font-medium">{data.dob}</p>
+
+                      <div className="flex items-center gap-8 border-t border-white/10 pt-8">
+                        <div>
+                          <p className="text-indigo-400/60 text-xs font-bold uppercase mb-1">Role</p>
+                          <p className="text-lg font-bold">{data.designation}</p>
+                        </div>
+                        <div>
+                          <p className="text-indigo-400/60 text-xs font-bold uppercase mb-1">DOB</p>
+                          <p className="text-lg font-bold">{data.dob}</p>
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="mt-12 p-4 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm flex items-center justify-center">
+                       <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest">HRMS System Verified ✔</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Editable Fields */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-3xl shadow-xl shadow-slate-100 p-8 border border-slate-100">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                    {isExisting ? <Edit className="w-6 h-6 text-indigo-500" /> : <Save className="w-6 h-6 text-indigo-500" />}
-                    {isExisting ? 'Update Information' : 'Enter Details'}
-                  </h2>
+              {/* Data Center Panel */}
+              <div className="lg:col-span-8">
+                <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] p-10 md:p-14 shadow-2xl border border-white">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
+                      <Edit className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-950">Record Management</h2>
+                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                      <div className="flex items-center gap-2 mb-1 text-indigo-600 text-sm font-semibold uppercase tracking-wider">
-                         <CreditCard className="w-4 h-4" /> Identity Details
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
+                    <div className="md:col-span-2 mb-6">
+                      <div className="flex items-center gap-2 text-slate-950 font-black text-sm uppercase tracking-widest">
+                         <CreditCard className="w-5 h-5 text-indigo-600" /> Statutory Details
                       </div>
+                      <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
 
                     <Input
@@ -311,7 +252,7 @@ function App() {
                       name="adharNumber"
                       value={data.adharNumber}
                       onChange={handleChange}
-                      placeholder="1234 5678 9012"
+                      placeholder="12 Digit Adhar"
                       maxLength={12}
                       error={errors.adharNumber}
                       isValid={!!data.adharNumber && !errors.adharNumber}
@@ -326,26 +267,25 @@ function App() {
                       maxLength={10}
                       error={errors.panNumber}
                       isValid={!!data.panNumber && !errors.panNumber}
-                      style={{ textTransform: 'uppercase' }}
                     />
 
-                    <Input
-                      label="Epic Number"
-                      name="epicNumber"
-                      value={data.epicNumber}
-                      onChange={handleChange}
-                      placeholder="GDN/12/34"
-                      error={errors.epicNumber}
-                      isValid={!!data.epicNumber && !errors.epicNumber}
-                      style={{ textTransform: 'uppercase' }}
-                    />
-                    
-                    <div className="hidden md:block"></div>
+                    <div className="md:col-span-2">
+                       <Input
+                        label="Epic (Voter) Number"
+                        name="epicNumber"
+                        value={data.epicNumber}
+                        onChange={handleChange}
+                        placeholder="ID Card Number"
+                        error={errors.epicNumber}
+                        isValid={!!data.epicNumber && !errors.epicNumber}
+                      />
+                    </div>
 
-                    <div className="md:col-span-2 mt-2">
-                      <div className="flex items-center gap-2 mb-1 text-indigo-600 text-sm font-semibold uppercase tracking-wider">
-                         <Smartphone className="w-4 h-4" /> Contact Information
+                    <div className="md:col-span-2 mt-8 mb-6">
+                      <div className="flex items-center gap-2 text-slate-950 font-black text-sm uppercase tracking-widest">
+                         <Smartphone className="w-5 h-5 text-indigo-600" /> Communication
                       </div>
+                      <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
 
                     <Input
@@ -353,76 +293,51 @@ function App() {
                       name="mobileNumber"
                       value={data.mobileNumber}
                       onChange={handleChange}
-                      placeholder="9876543210"
+                      placeholder="10 Digits"
                       maxLength={10}
-                      type="tel"
                       error={errors.mobileNumber}
                       isValid={!!data.mobileNumber && !errors.mobileNumber}
                     />
 
                     <Input
-                      label="Gmail ID"
+                      label="Email (Gmail)"
                       name="gmailId"
                       value={data.gmailId}
                       onChange={handleChange}
-                      placeholder="example@gmail.com"
-                      type="email"
+                      placeholder="user@gmail.com"
                       error={errors.gmailId}
                       isValid={!!data.gmailId && !errors.gmailId}
                     />
                   </div>
 
-                  <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+                  <div className="mt-14 flex items-center justify-end">
                     <button
                       type="submit"
                       disabled={loading}
-                      className={`
-                        px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2
-                        ${loading 
-                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
-                          : isExisting 
-                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200' 
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'
-                        }
-                      `}
+                      className="group px-10 py-5 bg-indigo-600 hover:bg-slate-950 text-white font-black text-xl rounded-2xl shadow-2xl shadow-indigo-200 transition-all flex items-center gap-4 disabled:bg-slate-300 transform hover:-translate-y-1 active:scale-95"
                     >
                       {loading ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      ) : isExisting ? (
-                        <><Edit className="w-5 h-5" /> Update Record</>
+                        <Loader2 className="w-7 h-7 animate-spin" />
                       ) : (
-                        <><Save className="w-5 h-5" /> Save Record</>
+                        <>
+                          {isExisting ? 'Update Global Record' : 'Create New Entry'}
+                          <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                        </>
                       )}
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
         )}
       </div>
+
+      <footer className="mt-12 text-slate-400 font-bold text-xs uppercase tracking-widest">
+        HRMS Data Protocol V4.2 • Secure Cloud Storage
+      </footer>
     </div>
   );
 }
-
-// Simple Logout Icon component locally to avoid import error if not exported from lucide-react in older versions
-const LogOutIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" x2="9" y1="12" y2="12" />
-  </svg>
-);
 
 export default App;
