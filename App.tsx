@@ -198,21 +198,21 @@ function App() {
                         <UserCheck className="w-10 h-10 text-indigo-300" />
                       </div>
                       <div className="text-right">
-                        <p className="text-indigo-400 text-xs font-black uppercase tracking-tighter">Identity Token</p>
+                        <p className="text-indigo-400 text-xs font-black uppercase tracking-tighter">मानव सम्पदा ID</p>
                         <p className="text-2xl font-black font-mono tracking-widest">#{data.hrmsId}</p>
                       </div>
                     </div>
 
                     <div className="space-y-8">
                       <div>
-                        <p className="text-indigo-400/60 text-xs font-bold uppercase tracking-widest mb-1">Employee Designation</p>
+                        <p className="text-indigo-400/60 text-xs font-bold uppercase tracking-widest mb-1">Employee Name</p>
                         <h3 className="text-2xl font-bold text-white leading-tight">{data.employeeName}</h3>
                         <p className="text-lg font-medium text-indigo-300 font-hindi mt-1">{data.hindiName}</p>
                       </div>
 
                       <div className="flex items-center gap-8 border-t border-white/10 pt-8">
                         <div>
-                          <p className="text-indigo-400/60 text-xs font-bold uppercase mb-1">Role</p>
+                          <p className="text-indigo-400/60 text-xs font-bold uppercase mb-1">Designation</p>
                           <p className="text-lg font-bold">{data.designation}</p>
                         </div>
                         <div>
