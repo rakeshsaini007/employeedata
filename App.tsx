@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { LogIn, Edit, Loader2, UserCheck, Smartphone, CreditCard, Calendar, Lock, LogOut, ShieldCheck, ChevronRight, Fingerprint, Type, Camera, Upload, Trash2, Building2, Binary, CheckCircle2 } from 'lucide-react';
+import { LogIn, Edit, Loader2, UserCheck, Smartphone, CreditCard, Calendar, Lock, LogOut, ShieldCheck, ChevronRight, Fingerprint, Type, Camera, Upload, Trash2, Building2, Binary, CheckCircle2, Save, RefreshCw } from 'lucide-react';
 import { Input } from './components/Input';
 import { Toast } from './components/Toast';
 import { loginEmployee, saveEmployee } from './services/api';
@@ -156,8 +156,10 @@ function App() {
     setLoading(false);
 
     if (response.status === 'success') {
+      // Use standard alert as requested
+      window.alert(response.message);
       setToast({ message: response.message, type: 'success' });
-      setIsExisting(true);
+      setIsExisting(true); // Now data definitely exists in cloud
     } else {
       setToast({ message: response.message, type: 'error' });
     }
@@ -244,7 +246,7 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* DIGITAL ID CARD - FIXED AND PROMINENT */}
+              {/* DIGITAL ID CARD - DISPLAYS ALL FETCHED DATA */}
               <div className="lg:col-span-4 lg:sticky lg:top-8">
                 <div className="bg-slate-950 rounded-[3rem] p-1 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)]">
                   <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 rounded-[2.8rem] p-8 text-white border border-white/10 relative overflow-hidden">
@@ -282,7 +284,7 @@ function App() {
                         </div>
                       </div>
 
-                      {/* VERIFIED EMPLOYMENT INFO - ALWAYS FETCHED */}
+                      {/* VERIFIED EMPLOYMENT INFO - AUTO FETCHED IN CARD */}
                       <div className="border-t border-white/10 pt-6 space-y-4">
                         <div>
                           <p className="text-emerald-400/70 text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -345,7 +347,6 @@ function App() {
                         </div>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 ml-2">* These details are auto-fetched from the HRMS Master Database.</p>
                   </div>
 
                   {/* Photo Section */}
@@ -437,7 +438,18 @@ function App() {
                       disabled={loading}
                       className="group px-12 py-5 bg-indigo-600 hover:bg-slate-950 text-white font-black text-lg rounded-[2rem] shadow-2xl shadow-indigo-100 transition-all flex items-center gap-4 disabled:bg-slate-300 transform hover:-translate-y-1 active:scale-95"
                     >
-                      {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>{isExisting ? 'Update Record & Cloud Sync' : 'Initialize Secure Record'} <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+                      {loading ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <>
+                          {isExisting ? (
+                            <><RefreshCw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" /> Update Record</>
+                          ) : (
+                            <><Save className="w-6 h-6 group-hover:scale-110 transition-transform" /> Save Record</>
+                          )}
+                          <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -448,7 +460,7 @@ function App() {
       </div>
 
       <footer className="mt-12 mb-8 text-slate-400 font-bold text-[10px] uppercase tracking-widest text-center leading-relaxed">
-        HRMS Official Access Portal • Build V4.7 • Secure Sync Enabled<br/>
+        HRMS Official Access Portal • Build V4.8 • Secure Cloud Sync<br/>
         <span className="opacity-50">Authorized Personnel Information System</span>
       </footer>
     </div>

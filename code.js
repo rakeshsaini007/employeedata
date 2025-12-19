@@ -1,6 +1,6 @@
 
 /**
- * Google Apps Script Code - Enhanced with Dynamic Column Detection
+ * Google Apps Script Code - Enhanced with Dynamic Column Detection and Specific Feedback
  */
 
 function doPost(e) {
@@ -144,8 +144,6 @@ function handleSave(data, sheetData, sheetList) {
     }
   }
 
-  // Determine row data based on detected mapping or fallback to standard indices
-  // Standard: ID, Name, Hindi, Design, DOB, Office, Udise, Adhar, Epic, PAN, Mobile, Gmail, Photo
   const rowData = new Array(13).fill("");
   rowData[0] = "'" + data.hrmsId;
   rowData[1] = data.employeeName;
@@ -161,10 +159,13 @@ function handleSave(data, sheetData, sheetList) {
   rowData[11] = data.gmailId;
   rowData[12] = data.photo || "";
 
+  let statusMsg = "";
   if (rowIndex !== -1) {
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+    statusMsg = "Data Updated Successfully!";
   } else {
     sheetData.appendRow(rowData);
+    statusMsg = "Data Saved Successfully!";
   }
 
   // Update master list with Hindi name
@@ -177,7 +178,7 @@ function handleSave(data, sheetData, sheetList) {
     }
   }
 
-  return createSuccessResponse({ message: "Record synchronized with Secure Cloud." });
+  return createSuccessResponse({ message: statusMsg });
 }
 
 function createSuccessResponse(payload) {
