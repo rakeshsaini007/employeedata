@@ -250,7 +250,7 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              {/* VIRTUAL ID CARD */}
+              {/* VIRTUAL ID CARD - SHOWS MASTER DATA ONLY */}
               <div className="lg:col-span-4 lg:sticky lg:top-8">
                 <div className="bg-slate-950 rounded-[3.5rem] p-1.5 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-slate-800">
                   <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 rounded-[3.2rem] p-10 text-white border border-white/5 relative overflow-hidden min-h-[500px] flex flex-col justify-between">
@@ -451,7 +451,7 @@ function App() {
       </div>
 
       <footer className="mt-20 mb-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] text-center leading-loose border-t border-slate-200 pt-10 w-full max-w-4xl">
-        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.0.0<br/>
+        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.1.0<br/>
         <span className="opacity-50">STRICT OVERWRITE SECURITY PROTOCOLS ACTIVE</span>
       </footer>
     </div>

@@ -98,27 +98,27 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   
+  // Check if record exists in Data sheet
+  let recordExists = false;
   for (let i = 1; i < dataValues.length; i++) {
     if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
-      const row = dataValues[i];
-      return createSuccessResponse({
-        exists: true,
-        data: {
-          ...masterInfo,
-          adharNumber: String(row[dataMap.adharNumber] || "").trim(),
-          epicNumber: String(row[dataMap.epicNumber] || "").trim(),
-          panNumber: String(row[dataMap.panNumber] || "").trim(),
-          mobileNumber: String(row[dataMap.mobileNumber] || "").trim(),
-          gmailId: String(row[dataMap.gmailId] || "").trim(),
-          photo: String(row[dataMap.photo] || "")
-        }
-      });
+      recordExists = true;
+      break;
     }
   }
 
+  // RETURN MASTER INFO BUT DO NOT SHOW PREVIOUSLY SAVED PRIVATE DATA FROM 'DATA' SHEET
   return createSuccessResponse({
-    exists: false,
-    data: { ...masterInfo, adharNumber: "", epicNumber: "", panNumber: "", mobileNumber: "", gmailId: "", photo: "" }
+    exists: recordExists,
+    data: { 
+      ...masterInfo, 
+      adharNumber: "", 
+      epicNumber: "", 
+      panNumber: "", 
+      mobileNumber: "", 
+      gmailId: "", 
+      photo: "" 
+    }
   });
 }
 
