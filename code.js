@@ -1,6 +1,6 @@
 
 /**
- * Google Apps Script Code - Enhanced for Strict Overwriting and Explicit Feedback
+ * Google Apps Script Code - Premium HRMS Portal Backend
  */
 
 function doPost(e) {
@@ -12,7 +12,7 @@ function doPost(e) {
     const sheetList = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("List");
 
     if (!sheetData || !sheetList) {
-      throw new Error("Required sheets 'Data' or 'List' are missing.");
+      throw new Error("Critical Failure: Required sheets 'Data' or 'List' are missing.");
     }
 
     const payload = JSON.parse(e.postData.contents);
@@ -23,7 +23,7 @@ function doPost(e) {
     } else if (action === "save") {
       return handleSave(payload.data, sheetData, sheetList);
     } else {
-      throw new Error("Invalid action");
+      throw new Error("Invalid action request.");
     }
 
   } catch (error) {
@@ -37,7 +37,7 @@ function doPost(e) {
 }
 
 /**
- * Robustly maps headers to column indices
+ * Maps headers to column indices dynamically to ensure robustness
  */
 function getHeaderMap(sheet) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -77,12 +77,12 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   }
 
   if (!listRow) {
-    throw new Error("HRMS ID not found in Master List.");
+    throw new Error("Access Denied: HRMS ID not found in master records.");
   }
 
   const listDob = formatDate(listRow[listMap.dob]);
   if (listDob !== passwordStr) {
-    throw new Error("Invalid Password. Date of Birth mismatch.");
+    throw new Error("Authentication Failed: Date of Birth mismatch.");
   }
 
   const masterInfo = {
@@ -98,14 +98,11 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   
-  // Look for existing entry in Data sheet to overwrite
   for (let i = 1; i < dataValues.length; i++) {
-    const currentId = String(dataValues[i][dataMap.hrmsId || 0]).trim();
-    if (currentId === hrmsIdStr) {
+    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       return createSuccessResponse({
         exists: true,
-        source: "Data",
         data: {
           ...masterInfo,
           adharNumber: String(row[dataMap.adharNumber] || "").trim(),
@@ -119,19 +116,9 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     }
   }
 
-  // No record in Data sheet yet
   return createSuccessResponse({
     exists: false,
-    source: "List",
-    data: {
-      ...masterInfo,
-      adharNumber: "",
-      epicNumber: "",
-      panNumber: "",
-      mobileNumber: "",
-      gmailId: "",
-      photo: ""
-    }
+    data: { ...masterInfo, adharNumber: "", epicNumber: "", panNumber: "", mobileNumber: "", gmailId: "", photo: "" }
   });
 }
 
@@ -141,45 +128,43 @@ function handleSave(data, sheetData, sheetList) {
   const dataValues = sheetData.getDataRange().getValues();
   let rowIndex = -1;
 
-  // Determine row for overwrite
-  const idCol = (dataMap.hrmsId !== undefined) ? dataMap.hrmsId : 0;
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][idCol]).trim() === hrmsIdStr) {
-      rowIndex = i + 1; // 1-indexed for Sheets
+    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
+      rowIndex = i + 1;
       break;
     }
   }
 
-  // Row structure (Matches fixed standard or dynamic map)
-  const rowData = new Array(13).fill("");
-  rowData[0] = "'" + data.hrmsId;
-  rowData[1] = data.employeeName;
-  rowData[2] = data.hindiName;
-  rowData[3] = data.designation;
-  rowData[4] = data.dob;
-  rowData[5] = data.postingOffice;
-  rowData[6] = data.udiseCode;
-  rowData[7] = "'" + data.adharNumber;
-  rowData[8] = data.epicNumber;
-  rowData[9] = data.panNumber;
-  rowData[10] = "'" + data.mobileNumber;
-  rowData[11] = data.gmailId;
-  rowData[12] = data.photo || "";
+  const rowData = [
+    "'" + data.hrmsId,
+    data.employeeName,
+    data.hindiName,
+    data.designation,
+    data.dob,
+    data.postingOffice,
+    data.udiseCode,
+    "'" + data.adharNumber,
+    data.epicNumber,
+    data.panNumber,
+    "'" + data.mobileNumber,
+    data.gmailId,
+    data.photo || ""
+  ];
 
   let statusMsg = "";
   if (rowIndex !== -1) {
-    // OVERWRITE EXISTING DATA
+    // STRICT OVERWRITE
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-    statusMsg = "Data Updated Successfully!";
+    statusMsg = "Data Overwritten & Updated Successfully!";
   } else {
-    // APPEND NEW DATA
+    // FRESH SAVE
     sheetData.appendRow(rowData);
-    statusMsg = "Data Saved Successfully!";
+    statusMsg = "New Record Saved Successfully!";
   }
 
-  // Sync Hindi name back to Master List
+  // Mandatory Sync of Hindi Name to Master List
   const listMap = getHeaderMap(sheetList);
-  const listValues = sheetList.getDataRange().getValues();
+  const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   for (let i = 1; i < listValues.length; i++) {
     if (String(listValues[i][listMap.hrmsId]).trim() === hrmsIdStr) {
       sheetList.getRange(i + 1, (listMap.hindiName || 2) + 1).setValue(data.hindiName);
