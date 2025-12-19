@@ -104,6 +104,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       existingData = {
+        hindiName: String(row[dataMap.hindiName] || "").trim(), // Explicitly fetch Hindi name from Data sheet
         adharNumber: String(row[dataMap.adharNumber] || "").trim(),
         epicNumber: String(row[dataMap.epicNumber] || "").trim(),
         panNumber: String(row[dataMap.panNumber] || "").trim(),
@@ -152,13 +153,11 @@ function handleSave(data, sheetData, sheetList) {
 
   let statusMsg = "";
   if (rowIndex !== -1) {
-    // STRICT OVERWRITE
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-    statusMsg = "Data Overwritten & Updated Successfully!";
+    statusMsg = "Record updated successfully!";
   } else {
-    // FRESH SAVE
     sheetData.appendRow(rowData);
-    statusMsg = "New Record Saved Successfully!";
+    statusMsg = "New record saved successfully!";
   }
 
   // Mandatory Sync of Hindi Name to Master List

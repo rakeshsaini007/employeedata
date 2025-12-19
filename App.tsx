@@ -122,7 +122,6 @@ function App() {
     const { name, value } = e.target;
     let formattedValue = (name === 'panNumber' || name === 'epicNumber') ? value.toUpperCase() : value;
     
-    // Strict Hindi Enforcement
     if (name === 'hindiName') {
       const hindiChars = value.match(/[\u0900-\u097F\s]/g) || [];
       formattedValue = hindiChars.join('');
@@ -250,7 +249,7 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              {/* VIRTUAL ID CARD - SHOWS MASTER DATA ONLY */}
+              {/* VIRTUAL ID CARD */}
               <div className="lg:col-span-4 lg:sticky lg:top-8">
                 <div className="bg-slate-950 rounded-[3.5rem] p-1.5 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-slate-800">
                   <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 rounded-[3.2rem] p-10 text-white border border-white/5 relative overflow-hidden min-h-[500px] flex flex-col justify-between">
@@ -275,7 +274,11 @@ function App() {
                         <div>
                           <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">FULL NAME</p>
                           <h3 className="text-3xl font-black text-white leading-tight uppercase">{data.employeeName}</h3>
-                          <p className="text-2xl font-bold text-indigo-400 font-hindi mt-2 bg-white/5 inline-block px-4 py-2 rounded-xl border border-white/10">{data.hindiName || 'हिंदी नाम'}</p>
+                          {/* Hindi Name Display */}
+                          <div className="mt-4 flex flex-col gap-1">
+                            <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">REGIONAL IDENTIFIER</p>
+                            <p className="text-2xl font-bold text-indigo-400 font-hindi bg-white/5 inline-block px-4 py-2 rounded-xl border border-white/10">{data.hindiName || '---'}</p>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
@@ -451,7 +454,7 @@ function App() {
       </div>
 
       <footer className="mt-20 mb-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] text-center leading-loose border-t border-slate-200 pt-10 w-full max-w-4xl">
-        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.1.0<br/>
+        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.2.0<br/>
         <span className="opacity-50">STRICT OVERWRITE SECURITY PROTOCOLS ACTIVE</span>
       </footer>
     </div>
