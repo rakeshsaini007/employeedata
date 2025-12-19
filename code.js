@@ -45,13 +45,13 @@ function getHeaderMap(sheet) {
   headers.forEach((header, index) => {
     const h = String(header).toLowerCase().trim();
     if (h.includes("hrms id") || h.includes("id")) map.hrmsId = index;
-    if (h.includes("employee name") || h.includes("name")) map.employeeName = index;
+    if (h.includes("employee name") || (h.includes("name") && !h.includes("hindi"))) map.employeeName = index;
     if (h.includes("कर्मचारी") || h.includes("hindi")) map.hindiName = index;
     if (h.includes("designation")) map.designation = index;
     if (h.includes("dob") || h.includes("date of birth")) map.dob = index;
     if (h.includes("posting office") || h.includes("office")) map.postingOffice = index;
     if (h.includes("udise code") || h.includes("udise")) map.udiseCode = index;
-    if (h.includes("adhar")) map.adharNumber = index;
+    if (h.includes("adhar") || h.includes("aadhar")) map.adharNumber = index;
     if (h.includes("epic")) map.epicNumber = index;
     if (h.includes("pan")) map.panNumber = index;
     if (h.includes("mobile")) map.mobileNumber = index;
@@ -85,11 +85,11 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     throw new Error("Authentication Failed: Date of Birth mismatch.");
   }
 
-  // Always fetch Hindi name from List sheet first (Master Source)
+  // Basic master info from List sheet
   const masterInfo = {
     hrmsId: String(listRow[listMap.hrmsId] || "").trim(),
     employeeName: String(listRow[listMap.employeeName] || "").trim(),
-    hindiName: String(listRow[listMap.hindiName || 0] || "").trim(), 
+    hindiName: String(listRow[listMap.hindiName] || "").trim(), 
     designation: String(listRow[listMap.designation] || "").trim(),
     dob: listDob,
     postingOffice: String(listRow[listMap.postingOffice] || "").trim(),
@@ -104,8 +104,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       existingData = {
-        // If Data sheet has a Hindi name, it might be more recent (updated by user)
-        hindiName: String(row[dataMap.hindiName] || "").trim() || masterInfo.hindiName,
+        hindiName: String(row[dataMap.hindiName] || masterInfo.hindiName).trim(),
         adharNumber: String(row[dataMap.adharNumber] || "").trim(),
         epicNumber: String(row[dataMap.epicNumber] || "").trim(),
         panNumber: String(row[dataMap.panNumber] || "").trim(),
@@ -136,28 +135,31 @@ function handleSave(data, sheetData, sheetList) {
     }
   }
 
-  const rowData = [
-    "'" + data.hrmsId,
-    data.employeeName,
-    data.hindiName,
-    data.designation,
-    data.dob,
-    data.postingOffice,
-    data.udiseCode,
-    "'" + data.adharNumber,
-    data.epicNumber,
-    data.panNumber,
-    "'" + data.mobileNumber,
-    data.gmailId,
-    data.photo || ""
-  ];
+  const rowData = [];
+  // Build row based on map to ensure correct columns
+  const maxCol = Math.max(...Object.values(dataMap)) + 1;
+  const newRow = new Array(maxCol).fill("");
+  
+  newRow[dataMap.hrmsId] = "'" + data.hrmsId;
+  newRow[dataMap.employeeName] = data.employeeName;
+  newRow[dataMap.hindiName] = data.hindiName;
+  newRow[dataMap.designation] = data.designation;
+  newRow[dataMap.dob] = data.dob;
+  newRow[dataMap.postingOffice] = data.postingOffice;
+  newRow[dataMap.udiseCode] = data.udiseCode;
+  newRow[dataMap.adharNumber] = "'" + data.adharNumber;
+  newRow[dataMap.epicNumber] = data.epicNumber;
+  newRow[dataMap.panNumber] = data.panNumber;
+  newRow[dataMap.mobileNumber] = "'" + data.mobileNumber;
+  newRow[dataMap.gmailId] = data.gmailId;
+  if (dataMap.photo !== undefined) newRow[dataMap.photo] = data.photo || "";
 
   let statusMsg = "";
   if (rowIndex !== -1) {
-    sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+    sheetData.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
     statusMsg = "Record updated successfully!";
   } else {
-    sheetData.appendRow(rowData);
+    sheetData.appendRow(newRow);
     statusMsg = "New record saved successfully!";
   }
 

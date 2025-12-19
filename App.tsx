@@ -112,7 +112,7 @@ function App() {
       setData(response.data);
       setIsExisting(response.exists || false);
       setStep('form');
-      setToast({ message: 'Identity Verified & Data Fetched', type: 'success' });
+      setToast({ message: response.exists ? 'Existing Records Synced' : 'Master Data Fetched', type: 'success' });
     } else {
       setToast({ message: response.message || 'Verification Failed', type: 'error' });
     }
@@ -162,7 +162,7 @@ function App() {
     setLoading(false);
 
     if (response.status === 'success') {
-      window.alert(response.message); // Explicit alert as requested
+      window.alert(response.message);
       setToast({ message: response.message, type: 'success' });
       setIsExisting(true); 
     } else {
@@ -323,10 +323,10 @@ function App() {
                     </div>
                   </div>
 
-                  {/* AUTO-FETCHED MASTER DATA SUMMARY */}
+                  {/* READ-ONLY SYSTEM DATA */}
                   <div className="mb-16">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-6">
-                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> AUTO-FETCHED MASTER LIST DATA
+                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> SECURELY FETCHED MASTER DATA
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-[3rem] border-2 border-slate-100">
                       <div>
@@ -349,7 +349,7 @@ function App() {
                   {/* PHOTO UPLOAD */}
                   <div className="mb-16">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-6">
-                       <Upload className="w-4 h-4 text-indigo-600" /> OFFICIAL IDENTITY CAPTURE
+                       <Upload className="w-4 h-4 text-indigo-600" /> IDENTITY ASSET {data.photo && <span className="text-[10px] ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">Synced</span>}
                     </div>
                     <div className="flex flex-col md:flex-row items-center gap-10 bg-indigo-50/10 p-10 rounded-[3rem] border-2 border-dashed border-indigo-200/50">
                       <div className="relative w-44 h-44">
@@ -371,10 +371,10 @@ function App() {
                       </div>
                       <div className="flex-1 w-full space-y-6">
                         <p className="text-sm text-slate-500 font-bold leading-relaxed">
-                          Please upload a clear, high-resolution portrait for identity verification. Supported formats: JPEG, PNG. Max 5MB.
+                          Please upload a clear, high-resolution portrait. If already uploaded, it is securely stored in our cloud.
                         </p>
                         <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-4 px-8 py-6 bg-slate-950 text-white rounded-[1.8rem] font-black text-lg hover:bg-indigo-700 shadow-2xl shadow-indigo-100 transition-all active:scale-95">
-                          <Upload className="w-6 h-6" /> CHOOSE IDENTITY PHOTO
+                          <Upload className="w-6 h-6" /> {data.photo ? 'REPLACE IDENTITY PHOTO' : 'CHOOSE IDENTITY PHOTO'}
                         </button>
                         <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handlePhotoChange} />
                         {errors.photo && <p className="text-xs text-red-600 font-black uppercase tracking-widest text-center md:text-left">{errors.photo}</p>}
@@ -386,7 +386,7 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
                     <div className="md:col-span-2 mb-8">
                       <div className="flex items-center gap-3 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL HINDI IDENTIFICATION (AUTO-FETCHED)
+                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL IDENTIFICATION
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
@@ -402,9 +402,7 @@ function App() {
                           isValid={!!data.hindiName && !errors.hindiName}
                           className="font-hindi text-2xl font-bold py-5 border-none focus:ring-0 shadow-none bg-transparent"
                         />
-                        {data.hindiName && !errors.hindiName && (
-                            <span className="absolute top-8 right-12 text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Fetched from System</span>
-                        )}
+                        {data.hindiName && <span className="absolute top-8 right-12 text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Auto-Fetched</span>}
                       </div>
                     </div>
 
@@ -414,10 +412,17 @@ function App() {
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
-                    <Input label="AADHAR CARD (12 DIGITS)" name="adharNumber" value={data.adharNumber} onChange={handleChange} placeholder="0000 0000 0000" maxLength={12} error={errors.adharNumber} isValid={!!data.adharNumber && !errors.adharNumber} />
-                    <Input label="PAN CARD (ALPHANUMERIC)" name="panNumber" value={data.panNumber} onChange={handleChange} placeholder="ABCDE1234F" maxLength={10} error={errors.panNumber} isValid={!!data.panNumber && !errors.panNumber} />
-                    <div className="md:col-span-2">
+                    <div className="relative">
+                      <Input label="AADHAR CARD (12 DIGITS)" name="adharNumber" value={data.adharNumber} onChange={handleChange} placeholder="0000 0000 0000" maxLength={12} error={errors.adharNumber} isValid={!!data.adharNumber && !errors.adharNumber} />
+                      {data.adharNumber && !errors.adharNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    </div>
+                    <div className="relative">
+                      <Input label="PAN CARD (ALPHANUMERIC)" name="panNumber" value={data.panNumber} onChange={handleChange} placeholder="ABCDE1234F" maxLength={10} error={errors.panNumber} isValid={!!data.panNumber && !errors.panNumber} />
+                      {data.panNumber && !errors.panNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    </div>
+                    <div className="md:col-span-2 relative">
                        <Input label="VOTER ID (EPIC) NUMBER" name="epicNumber" value={data.epicNumber} onChange={handleChange} placeholder="ID Card Alpha-Num" error={errors.epicNumber} isValid={!!data.epicNumber && !errors.epicNumber} />
+                       {data.epicNumber && !errors.epicNumber && isExisting && <span className="absolute top-2 right-12 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
                     </div>
 
                     <div className="md:col-span-2 mt-10 mb-8">
@@ -426,8 +431,14 @@ function App() {
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
-                    <Input label="MOBILE NUMBER" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digit Primary" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
-                    <Input label="OFFICIAL GMAIL ADDRESS" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="user@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
+                    <div className="relative">
+                      <Input label="MOBILE NUMBER" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digit Primary" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
+                      {data.mobileNumber && !errors.mobileNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    </div>
+                    <div className="relative">
+                      <Input label="OFFICIAL GMAIL ADDRESS" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="user@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
+                      {data.gmailId && !errors.gmailId && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    </div>
                   </div>
 
                   <div className="mt-20 flex items-center justify-end">
@@ -441,7 +452,7 @@ function App() {
                       ) : (
                         <>
                           {isExisting ? (
-                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> UPDATE RECORD</>
+                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> UPDATE SECURE RECORD</>
                           ) : (
                             <><Save className="w-7 h-7 group-hover:scale-125 transition-transform" /> SAVE NEW RECORD</>
                           )}
@@ -458,8 +469,8 @@ function App() {
       </div>
 
       <footer className="mt-20 mb-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] text-center leading-loose border-t border-slate-200 pt-10 w-full max-w-4xl">
-        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.3.0<br/>
-        <span className="opacity-50">STRICT OVERWRITE SECURITY PROTOCOLS ACTIVE</span>
+        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.4.0<br/>
+        <span className="opacity-50">REAL-TIME DATA SYNC ACTIVE</span>
       </footer>
     </div>
   );
