@@ -4,11 +4,14 @@ export interface EmployeeData {
   hindiName: string;
   designation: string;
   dob: string;
+  postingOffice: string;
+  udiseCode: string;
   adharNumber: string;
   epicNumber: string;
   panNumber: string;
   mobileNumber: string;
   gmailId: string;
+  photo?: string; // Base64 encoded image string
 }
 
 export interface LoginResponse {
@@ -31,4 +34,5 @@ export interface ValidationErrors {
   mobileNumber?: string;
   gmailId?: string;
   hindiName?: string;
+  photo?: string;
 }

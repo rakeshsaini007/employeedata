@@ -1,17 +1,6 @@
+
 /**
- * Google Apps Script Code
- * 
- * Instructions:
- * 1. Open your Google Sheet.
- * 2. Go to Extensions > Apps Script.
- * 3. Paste this code into Code.gs.
- * 4. Click Deploy > New Deployment.
- * 5. Select type: "Web app".
- * 6. Description: "v3 - Sync Hindi Name to List".
- * 7. Execute as: "Me".
- * 8. Who has access: "Anyone".
- * 9. Click Deploy.
- * 10. Copy the "Web app URL" and paste it into `constants.ts` in the React app.
+ * Google Apps Script Code - Enhanced with Dynamic Column Detection
  */
 
 function doPost(e) {
@@ -47,100 +36,130 @@ function doPost(e) {
   }
 }
 
+/**
+ * Maps headers to indices for robust data retrieval
+ */
+function getHeaderMap(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const map = {};
+  headers.forEach((header, index) => {
+    const h = String(header).toLowerCase().trim();
+    if (h.includes("hrms id") || h.includes("id")) map.hrmsId = index;
+    if (h.includes("employee name") || h.includes("name")) map.employeeName = index;
+    if (h.includes("कर्मचारी") || h.includes("hindi name")) map.hindiName = index;
+    if (h.includes("designation")) map.designation = index;
+    if (h.includes("dob") || h.includes("date of birth")) map.dob = index;
+    if (h.includes("posting office") || h.includes("office")) map.postingOffice = index;
+    if (h.includes("udise code") || h.includes("udise")) map.udiseCode = index;
+    if (h.includes("adhar")) map.adharNumber = index;
+    if (h.includes("epic")) map.epicNumber = index;
+    if (h.includes("pan")) map.panNumber = index;
+    if (h.includes("mobile")) map.mobileNumber = index;
+    if (h.includes("gmail") || h.includes("email")) map.gmailId = index;
+    if (h.includes("photo")) map.photo = index;
+  });
+  return map;
+}
+
 function handleLogin(hrmsId, password, sheetData, sheetList) {
   const hrmsIdStr = String(hrmsId).trim();
-  const passwordStr = String(password).trim(); // Expected format: DD-MM-YYYY
+  const passwordStr = String(password).trim(); 
 
-  // 1. Verify Credentials in 'List' sheet
-  // Headers: HRMS ID, Employee Name, Hindi Name, Designation, DOB
+  const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getDataRange().getValues();
   let listRow = null;
 
   for (let i = 1; i < listValues.length; i++) {
-    if (String(listValues[i][0]).trim() === hrmsIdStr) {
+    if (String(listValues[i][listMap.hrmsId]).trim() === hrmsIdStr) {
       listRow = listValues[i];
       break;
     }
   }
 
   if (!listRow) {
-    throw new Error("User ID (HRMS) not found.");
+    throw new Error("HRMS ID not found in Master List.");
   }
 
-  const listDob = formatDate(listRow[4]);
+  const listDob = formatDate(listRow[listMap.dob]);
   if (listDob !== passwordStr) {
     throw new Error("Invalid Password. Date of Birth mismatch.");
   }
 
-  // 2. Credentials Valid. Check 'Data' sheet for existing record.
-  // Headers: HRMS ID, Name, Hindi Name, Designation, DOB, Adhar, Epic, PAN, Mobile, Gmail
+  const masterInfo = {
+    hrmsId: String(listRow[listMap.hrmsId] || "").trim(),
+    employeeName: String(listRow[listMap.employeeName] || "").trim(),
+    hindiName: String(listRow[listMap.hindiName] || "").trim(),
+    designation: String(listRow[listMap.designation] || "").trim(),
+    dob: listDob,
+    postingOffice: String(listRow[listMap.postingOffice] || "").trim(),
+    udiseCode: String(listRow[listMap.udiseCode] || "").trim()
+  };
+
+  const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][0]).trim() === hrmsIdStr) {
+    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       return createSuccessResponse({
         exists: true,
         source: "Data",
         data: {
-          hrmsId: row[0],
-          employeeName: row[1],
-          hindiName: row[2],
-          designation: row[3],
-          dob: formatDate(row[4]),
-          adharNumber: row[5],
-          epicNumber: row[6],
-          panNumber: row[7],
-          mobileNumber: row[8],
-          gmailId: row[9]
+          ...masterInfo,
+          adharNumber: String(row[dataMap.adharNumber] || "").trim(),
+          epicNumber: String(row[dataMap.epicNumber] || "").trim(),
+          panNumber: String(row[dataMap.panNumber] || "").trim(),
+          mobileNumber: String(row[dataMap.mobileNumber] || "").trim(),
+          gmailId: String(row[dataMap.gmailId] || "").trim(),
+          photo: String(row[dataMap.photo] || "")
         }
       });
     }
   }
 
-  // 3. Not in Data, return List info
   return createSuccessResponse({
     exists: false,
     source: "List",
     data: {
-      hrmsId: listRow[0],
-      employeeName: listRow[1],
-      hindiName: listRow[2],
-      designation: listRow[3],
-      dob: formatDate(listRow[4]),
+      ...masterInfo,
       adharNumber: "",
       epicNumber: "",
       panNumber: "",
       mobileNumber: "",
-      gmailId: ""
+      gmailId: "",
+      photo: ""
     }
   });
 }
 
 function handleSave(data, sheetData, sheetList) {
   const hrmsIdStr = String(data.hrmsId).trim();
+  const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   let rowIndex = -1;
 
-  // 1. Update/Append to 'Data' sheet
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][0]).trim() === hrmsIdStr) {
-      rowIndex = i + 1; // 1-based index
+    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
+      rowIndex = i + 1;
       break;
     }
   }
 
-  const rowData = [
-    "'" + data.hrmsId, // Force string to prevent scientific notation
-    data.employeeName,
-    data.hindiName,
-    data.designation,
-    data.dob,
-    "'" + data.adharNumber, // Force string for Adhar
-    data.epicNumber,
-    data.panNumber,
-    "'" + data.mobileNumber, // Force string for Mobile
-    data.gmailId
-  ];
+  // Determine row data based on detected mapping or fallback to standard indices
+  // Standard: ID, Name, Hindi, Design, DOB, Office, Udise, Adhar, Epic, PAN, Mobile, Gmail, Photo
+  const rowData = new Array(13).fill("");
+  rowData[0] = "'" + data.hrmsId;
+  rowData[1] = data.employeeName;
+  rowData[2] = data.hindiName;
+  rowData[3] = data.designation;
+  rowData[4] = data.dob;
+  rowData[5] = data.postingOffice;
+  rowData[6] = data.udiseCode;
+  rowData[7] = "'" + data.adharNumber;
+  rowData[8] = data.epicNumber;
+  rowData[9] = data.panNumber;
+  rowData[10] = "'" + data.mobileNumber;
+  rowData[11] = data.gmailId;
+  rowData[12] = data.photo || "";
 
   if (rowIndex !== -1) {
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
@@ -148,17 +167,17 @@ function handleSave(data, sheetData, sheetList) {
     sheetData.appendRow(rowData);
   }
 
-  // 2. Sync Hindi Name back to 'List' sheet automatically
+  // Update master list with Hindi name
+  const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getDataRange().getValues();
   for (let i = 1; i < listValues.length; i++) {
-    if (String(listValues[i][0]).trim() === hrmsIdStr) {
-      // Column index 3 is 'Hindi Name' in the List sheet (headers: ID, Name, Hindi, Design, DOB)
-      sheetList.getRange(i + 1, 3).setValue(data.hindiName);
+    if (String(listValues[i][listMap.hrmsId]).trim() === hrmsIdStr) {
+      sheetList.getRange(i + 1, (listMap.hindiName || 2) + 1).setValue(data.hindiName);
       break;
     }
   }
 
-  return createSuccessResponse({ message: "Record synchronized successfully!" });
+  return createSuccessResponse({ message: "Record synchronized with Secure Cloud." });
 }
 
 function createSuccessResponse(payload) {

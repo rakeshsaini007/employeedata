@@ -1,5 +1,7 @@
 {
   "name": "HRMS Employee Data Portal",
   "description": "A premium employee data management interface linked to Google Sheets for managing HRMS records.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
