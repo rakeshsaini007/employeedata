@@ -1,6 +1,6 @@
 
 /**
- * Google Apps Script Code - Enhanced with Dynamic Column Detection and Specific Feedback
+ * Google Apps Script Code - Enhanced for Strict Overwriting and Explicit Feedback
  */
 
 function doPost(e) {
@@ -37,7 +37,7 @@ function doPost(e) {
 }
 
 /**
- * Maps headers to indices for robust data retrieval
+ * Robustly maps headers to column indices
  */
 function getHeaderMap(sheet) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -66,7 +66,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   const passwordStr = String(password).trim(); 
 
   const listMap = getHeaderMap(sheetList);
-  const listValues = sheetList.getDataRange().getValues();
+  const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   let listRow = null;
 
   for (let i = 1; i < listValues.length; i++) {
@@ -97,8 +97,11 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
 
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
+  
+  // Look for existing entry in Data sheet to overwrite
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
+    const currentId = String(dataValues[i][dataMap.hrmsId || 0]).trim();
+    if (currentId === hrmsIdStr) {
       const row = dataValues[i];
       return createSuccessResponse({
         exists: true,
@@ -116,6 +119,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     }
   }
 
+  // No record in Data sheet yet
   return createSuccessResponse({
     exists: false,
     source: "List",
@@ -137,13 +141,16 @@ function handleSave(data, sheetData, sheetList) {
   const dataValues = sheetData.getDataRange().getValues();
   let rowIndex = -1;
 
+  // Determine row for overwrite
+  const idCol = (dataMap.hrmsId !== undefined) ? dataMap.hrmsId : 0;
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
-      rowIndex = i + 1;
+    if (String(dataValues[i][idCol]).trim() === hrmsIdStr) {
+      rowIndex = i + 1; // 1-indexed for Sheets
       break;
     }
   }
 
+  // Row structure (Matches fixed standard or dynamic map)
   const rowData = new Array(13).fill("");
   rowData[0] = "'" + data.hrmsId;
   rowData[1] = data.employeeName;
@@ -161,14 +168,16 @@ function handleSave(data, sheetData, sheetList) {
 
   let statusMsg = "";
   if (rowIndex !== -1) {
+    // OVERWRITE EXISTING DATA
     sheetData.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
     statusMsg = "Data Updated Successfully!";
   } else {
+    // APPEND NEW DATA
     sheetData.appendRow(rowData);
     statusMsg = "Data Saved Successfully!";
   }
 
-  // Update master list with Hindi name
+  // Sync Hindi name back to Master List
   const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getDataRange().getValues();
   for (let i = 1; i < listValues.length; i++) {

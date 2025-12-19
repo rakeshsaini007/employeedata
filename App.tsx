@@ -147,7 +147,7 @@ function App() {
 
     if (hasError) {
         setErrors(newErrors);
-        setToast({ message: 'Missing required information.', type: 'error' });
+        setToast({ message: 'Validation error: Please complete all mandatory fields.', type: 'error' });
         return;
     }
 
@@ -156,10 +156,10 @@ function App() {
     setLoading(false);
 
     if (response.status === 'success') {
-      // Use standard alert as requested
+      // BROWSER ALERT AS REQUESTED
       window.alert(response.message);
       setToast({ message: response.message, type: 'success' });
-      setIsExisting(true); // Now data definitely exists in cloud
+      setIsExisting(true); // Flag as existing so button changes to Update
     } else {
       setToast({ message: response.message, type: 'error' });
     }
@@ -178,7 +178,7 @@ function App() {
             Employee <span className="text-indigo-600">Executive</span> Portal
           </h1>
           <p className="mt-4 text-slate-600 font-medium text-lg text-center max-w-xl">
-            Secure identity and record management for HRMS verified personnel.
+            Identity verification and cloud record management for HRMS personnel.
           </p>
         </header>
 
@@ -194,13 +194,13 @@ function App() {
               </div>
               <form onSubmit={handleLogin} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-slate-900 mb-2">HRMS Code</label>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">HRMS ID</label>
                   <div className="relative">
                     <input
                       type="text"
                       value={hrmsIdLogin}
                       onChange={(e) => setHrmsIdLogin(e.target.value)}
-                      placeholder="Enter ID"
+                      placeholder="Enter HRMS ID"
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-950 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                       required
                     />
@@ -208,7 +208,7 @@ function App() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-900 mb-2">Date of Birth</label>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">Date of Birth (Password)</label>
                   <div className="relative">
                     <input
                       type="date"
@@ -237,16 +237,16 @@ function App() {
                 onClick={() => setStep('login')}
                 className="px-6 py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl border-2 border-slate-200 flex items-center gap-2 shadow-sm transition-all"
               >
-                <LogOut className="w-5 h-5" /> Sign Out
+                <LogOut className="w-5 h-5" /> Logout
               </button>
               <div className="flex items-center gap-3 bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-emerald-100">
                 <ShieldCheck className="w-5 h-5" />
-                Verified Session: {data.hrmsId}
+                Session Active: {data.hrmsId}
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* DIGITAL ID CARD - DISPLAYS ALL FETCHED DATA */}
+              {/* DIGITAL ID CARD - DISPLAYS ALL FETCHED & CLOUD DATA */}
               <div className="lg:col-span-4 lg:sticky lg:top-8">
                 <div className="bg-slate-950 rounded-[3rem] p-1 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)]">
                   <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 rounded-[2.8rem] p-8 text-white border border-white/10 relative overflow-hidden">
@@ -284,7 +284,7 @@ function App() {
                         </div>
                       </div>
 
-                      {/* VERIFIED EMPLOYMENT INFO - AUTO FETCHED IN CARD */}
+                      {/* AUTO-FETCHED VERIFIED EMPLOYMENT INFO */}
                       <div className="border-t border-white/10 pt-6 space-y-4">
                         <div>
                           <p className="text-emerald-400/70 text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -292,7 +292,7 @@ function App() {
                           </p>
                           <div className="bg-white/5 px-4 py-3 rounded-xl border border-white/10 flex items-center gap-3">
                              <Building2 className="w-4 h-4 text-indigo-400" />
-                             <p className="text-xs font-bold leading-snug">{data.postingOffice || 'Fetching Data...'}</p>
+                             <p className="text-xs font-bold leading-snug">{data.postingOffice || 'Fetching...'}</p>
                           </div>
                         </div>
 
@@ -302,7 +302,7 @@ function App() {
                           </p>
                           <div className="bg-white/5 px-4 py-3 rounded-xl border border-white/10 flex items-center gap-3">
                              <Binary className="w-4 h-4 text-indigo-400" />
-                             <p className="text-sm font-bold font-mono tracking-wider">{data.udiseCode || 'Fetching Data...'}</p>
+                             <p className="text-sm font-bold font-mono tracking-wider">{data.udiseCode || 'Fetching...'}</p>
                           </div>
                         </div>
                       </div>
@@ -310,40 +310,40 @@ function App() {
 
                     <div className="mt-8 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 backdrop-blur-sm flex items-center justify-center gap-3">
                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                       <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Master Cloud Synchronized ✔</p>
+                       <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Master Verified Account ✔</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* DATA FORM SECTION */}
+              {/* CLOUD DATA MANAGEMENT FORM */}
               <div className="lg:col-span-8">
                 <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl border border-white">
                   <div className="flex items-center gap-4 mb-10">
                     <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
                       <Edit className="w-6 h-6 text-indigo-600" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-950">Record Management</h2>
+                    <h2 className="text-3xl font-black text-slate-950">Record Synchronization</h2>
                   </div>
 
-                  {/* AUTO-FETCHED VERIFIED SECTION */}
+                  {/* READ-ONLY MASTER DATA */}
                   <div className="mb-12">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-5">
-                       <ShieldCheck className="w-4 h-4 text-emerald-600" /> System-Verified Employment Data
+                       <ShieldCheck className="w-4 h-4 text-emerald-600" /> System-Verified Office Info
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-[2.5rem] border-2 border-slate-100">
                       <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Verified Posting Office</label>
-                        <div className="bg-white px-5 py-4 rounded-xl border-2 border-slate-200 text-slate-900 font-bold flex items-center gap-3 shadow-sm">
+                        <div className="bg-white px-5 py-4 rounded-xl border-2 border-slate-200 text-slate-900 font-bold flex items-center gap-3 shadow-sm select-none">
                           <Building2 className="w-5 h-5 text-indigo-500" />
-                          <span className="text-sm">{data.postingOffice || "Not Available"}</span>
+                          <span className="text-sm">{data.postingOffice || "N/A"}</span>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Office Udise Code</label>
-                        <div className="bg-white px-5 py-4 rounded-xl border-2 border-slate-200 text-slate-900 font-bold font-mono tracking-widest flex items-center gap-3 shadow-sm">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Verified Udise Code</label>
+                        <div className="bg-white px-5 py-4 rounded-xl border-2 border-slate-200 text-slate-900 font-bold font-mono tracking-widest flex items-center gap-3 shadow-sm select-none">
                           <Binary className="w-5 h-5 text-indigo-500" />
-                          <span className="text-sm">{data.udiseCode || "Not Available"}</span>
+                          <span className="text-sm">{data.udiseCode || "N/A"}</span>
                         </div>
                       </div>
                     </div>
@@ -352,17 +352,17 @@ function App() {
                   {/* Photo Section */}
                   <div className="mb-12">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-4">
-                       <Camera className="w-4 h-4 text-indigo-600" /> Profile Image (Required)
+                       <Camera className="w-4 h-4 text-indigo-600" /> Profile Identity (Compulsory)
                     </div>
                     <div className="flex flex-col md:flex-row items-center gap-8 bg-indigo-50/20 p-8 rounded-[2.5rem] border-2 border-dashed border-indigo-200/50">
                       <div className="relative w-36 h-36">
-                        <div className={`w-36 h-36 rounded-[2rem] overflow-hidden border-4 ${errors.photo ? 'border-red-400' : 'border-white'} shadow-2xl bg-white flex items-center justify-center transition-transform hover:rotate-2`}>
+                        <div className={`w-36 h-36 rounded-[2rem] overflow-hidden border-4 ${errors.photo ? 'border-red-400' : 'border-white'} shadow-2xl bg-white flex items-center justify-center transition-transform hover:rotate-1`}>
                           {data.photo ? (
                             <img src={data.photo} alt="Preview" className="w-full h-full object-cover" />
                           ) : (
                             <div className="text-slate-200 flex flex-col items-center gap-1">
                               <UserCheck className="w-12 h-12" />
-                              <span className="text-[8px] font-black uppercase tracking-widest">No Image</span>
+                              <span className="text-[8px] font-black uppercase tracking-widest">Empty Slot</span>
                             </div>
                           )}
                         </div>
@@ -375,10 +375,10 @@ function App() {
                       <div className="flex-1 space-y-4 w-full">
                         <div className="flex flex-wrap gap-4">
                           <button type="button" onClick={() => cameraInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95">
-                            <Camera className="w-5 h-5" /> Capture Selfie
+                            <Camera className="w-5 h-5" /> Take Snapshot
                           </button>
                           <button type="button" onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white text-slate-950 border-2 border-slate-200 rounded-2xl font-black hover:bg-slate-50 transition-all active:scale-95">
-                            <Upload className="w-5 h-5" /> Local Upload
+                            <Upload className="w-5 h-5" /> Choose File
                           </button>
                         </div>
                         <input type="file" ref={cameraInputRef} accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
@@ -391,18 +391,18 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                     <div className="md:col-span-2 mb-6 mt-4">
                       <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Type className="w-4 h-4 text-indigo-600" /> Regional Identity (Hindi)
+                         <Type className="w-4 h-4 text-indigo-600" /> Regional Language Identity
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
                     <div className="md:col-span-2">
                       <div className="bg-indigo-50/30 p-6 rounded-[2.5rem] border-2 border-indigo-100/50 mb-6 focus-within:border-indigo-600 transition-all group">
                         <Input
-                          label="Hindi Name (नाम हिंदी में)"
+                          label="Hindi Name (कर्मचारी का नाम)"
                           name="hindiName"
                           value={data.hindiName}
                           onChange={handleChange}
-                          placeholder="अपना नाम हिंदी में दर्ज करें"
+                          placeholder="हिंदी में अपना नाम दर्ज करें"
                           error={errors.hindiName}
                           isValid={!!data.hindiName && !errors.hindiName}
                           className="font-hindi text-xl py-4 border-none focus:ring-0 shadow-none bg-transparent"
@@ -412,24 +412,24 @@ function App() {
 
                     <div className="md:col-span-2 mb-6 mt-4">
                       <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <CreditCard className="w-4 h-4 text-indigo-600" /> Statutory Numbers
+                         <CreditCard className="w-4 h-4 text-indigo-600" /> Government IDs
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
-                    <Input label="Adhar Number" name="adharNumber" value={data.adharNumber} onChange={handleChange} placeholder="12 Digit Adhar" maxLength={12} error={errors.adharNumber} isValid={!!data.adharNumber && !errors.adharNumber} />
-                    <Input label="PAN Number" name="panNumber" value={data.panNumber} onChange={handleChange} placeholder="ABCDE1234F" maxLength={10} error={errors.panNumber} isValid={!!data.panNumber && !errors.panNumber} />
+                    <Input label="Aadhar Number" name="adharNumber" value={data.adharNumber} onChange={handleChange} placeholder="12 Digit Aadhar" maxLength={12} error={errors.adharNumber} isValid={!!data.adharNumber && !errors.adharNumber} />
+                    <Input label="PAN Card Number" name="panNumber" value={data.panNumber} onChange={handleChange} placeholder="ABCDE1234F" maxLength={10} error={errors.panNumber} isValid={!!data.panNumber && !errors.panNumber} />
                     <div className="md:col-span-2">
-                       <Input label="Epic (Voter ID) Number" name="epicNumber" value={data.epicNumber} onChange={handleChange} placeholder="Card ID Number" error={errors.epicNumber} isValid={!!data.epicNumber && !errors.epicNumber} />
+                       <Input label="Voter ID (EPIC) Number" name="epicNumber" value={data.epicNumber} onChange={handleChange} placeholder="Enter Voter ID" error={errors.epicNumber} isValid={!!data.epicNumber && !errors.epicNumber} />
                     </div>
 
                     <div className="md:col-span-2 mt-6 mb-6">
                       <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Smartphone className="w-4 h-4 text-indigo-600" /> Digital Communication
+                         <Smartphone className="w-4 h-4 text-indigo-600" /> Reachability Info
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-2"></div>
                     </div>
-                    <Input label="Mobile Number" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digits" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
-                    <Input label="Official Email (Gmail)" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="user@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
+                    <Input label="Primary Mobile" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digit Mobile" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
+                    <Input label="Official Gmail" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="example@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
                   </div>
 
                   <div className="mt-14 flex items-center justify-end">
@@ -460,7 +460,7 @@ function App() {
       </div>
 
       <footer className="mt-12 mb-8 text-slate-400 font-bold text-[10px] uppercase tracking-widest text-center leading-relaxed">
-        HRMS Official Access Portal • Build V4.8 • Secure Cloud Sync<br/>
+        HRMS Official Access Portal • Build V4.9 • Strict Cloud Overwrite Active<br/>
         <span className="opacity-50">Authorized Personnel Information System</span>
       </footer>
     </div>
