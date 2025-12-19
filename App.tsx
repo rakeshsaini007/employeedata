@@ -112,7 +112,7 @@ function App() {
       setData(response.data);
       setIsExisting(response.exists || false);
       setStep('form');
-      setToast({ message: 'Credentials Verified', type: 'success' });
+      setToast({ message: 'Identity Verified & Data Fetched', type: 'success' });
     } else {
       setToast({ message: response.message || 'Verification Failed', type: 'error' });
     }
@@ -162,7 +162,7 @@ function App() {
     setLoading(false);
 
     if (response.status === 'success') {
-      window.alert(response.message);
+      window.alert(response.message); // Explicit alert as requested
       setToast({ message: response.message, type: 'success' });
       setIsExisting(true); 
     } else {
@@ -274,10 +274,11 @@ function App() {
                         <div>
                           <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">FULL NAME</p>
                           <h3 className="text-3xl font-black text-white leading-tight uppercase">{data.employeeName}</h3>
-                          {/* Hindi Name Display */}
                           <div className="mt-4 flex flex-col gap-1">
                             <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">REGIONAL IDENTIFIER</p>
-                            <p className="text-2xl font-bold text-indigo-400 font-hindi bg-white/5 inline-block px-4 py-2 rounded-xl border border-white/10">{data.hindiName || '---'}</p>
+                            <p className="text-2xl font-bold text-indigo-400 font-hindi bg-white/5 inline-block px-4 py-2 rounded-xl border border-white/10">
+                                {data.hindiName || '---'}
+                            </p>
                           </div>
                         </div>
 
@@ -322,10 +323,10 @@ function App() {
                     </div>
                   </div>
 
-                  {/* READ-ONLY SYSTEM DATA */}
+                  {/* AUTO-FETCHED MASTER DATA SUMMARY */}
                   <div className="mb-16">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-6">
-                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> VERIFIED MASTER LIST DATA
+                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> AUTO-FETCHED MASTER LIST DATA
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-[3rem] border-2 border-slate-100">
                       <div>
@@ -385,12 +386,12 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
                     <div className="md:col-span-2 mb-8">
                       <div className="flex items-center gap-3 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL HINDI IDENTIFICATION
+                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL HINDI IDENTIFICATION (AUTO-FETCHED)
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
                     <div className="md:col-span-2">
-                      <div className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 mb-8 focus-within:border-indigo-600 focus-within:bg-white transition-all group">
+                      <div className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 mb-8 focus-within:border-indigo-600 focus-within:bg-white transition-all group relative">
                         <Input
                           label="HINDI NAME (कर्मचारी का नाम)"
                           name="hindiName"
@@ -401,6 +402,9 @@ function App() {
                           isValid={!!data.hindiName && !errors.hindiName}
                           className="font-hindi text-2xl font-bold py-5 border-none focus:ring-0 shadow-none bg-transparent"
                         />
+                        {data.hindiName && !errors.hindiName && (
+                            <span className="absolute top-8 right-12 text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Fetched from System</span>
+                        )}
                       </div>
                     </div>
 
@@ -437,7 +441,7 @@ function App() {
                       ) : (
                         <>
                           {isExisting ? (
-                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> OVERWRITE & UPDATE</>
+                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> UPDATE RECORD</>
                           ) : (
                             <><Save className="w-7 h-7 group-hover:scale-125 transition-transform" /> SAVE NEW RECORD</>
                           )}
@@ -454,7 +458,7 @@ function App() {
       </div>
 
       <footer className="mt-20 mb-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] text-center leading-loose border-t border-slate-200 pt-10 w-full max-w-4xl">
-        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.2.0<br/>
+        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.3.0<br/>
         <span className="opacity-50">STRICT OVERWRITE SECURITY PROTOCOLS ACTIVE</span>
       </footer>
     </div>

@@ -37,7 +37,7 @@ function doPost(e) {
 }
 
 /**
- * Maps headers to column indices dynamically to ensure robustness
+ * Maps headers to column indices dynamically
  */
 function getHeaderMap(sheet) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -46,7 +46,7 @@ function getHeaderMap(sheet) {
     const h = String(header).toLowerCase().trim();
     if (h.includes("hrms id") || h.includes("id")) map.hrmsId = index;
     if (h.includes("employee name") || h.includes("name")) map.employeeName = index;
-    if (h.includes("कर्मचारी") || h.includes("hindi name")) map.hindiName = index;
+    if (h.includes("कर्मचारी") || h.includes("hindi")) map.hindiName = index;
     if (h.includes("designation")) map.designation = index;
     if (h.includes("dob") || h.includes("date of birth")) map.dob = index;
     if (h.includes("posting office") || h.includes("office")) map.postingOffice = index;
@@ -85,10 +85,11 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     throw new Error("Authentication Failed: Date of Birth mismatch.");
   }
 
+  // Always fetch Hindi name from List sheet first (Master Source)
   const masterInfo = {
     hrmsId: String(listRow[listMap.hrmsId] || "").trim(),
     employeeName: String(listRow[listMap.employeeName] || "").trim(),
-    hindiName: String(listRow[listMap.hindiName] || "").trim(),
+    hindiName: String(listRow[listMap.hindiName || 0] || "").trim(), 
     designation: String(listRow[listMap.designation] || "").trim(),
     dob: listDob,
     postingOffice: String(listRow[listMap.postingOffice] || "").trim(),
@@ -98,13 +99,13 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   
-  // Fetch existing record from Data sheet if available
   let existingData = null;
   for (let i = 1; i < dataValues.length; i++) {
     if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       existingData = {
-        hindiName: String(row[dataMap.hindiName] || "").trim(), // Explicitly fetch Hindi name from Data sheet
+        // If Data sheet has a Hindi name, it might be more recent (updated by user)
+        hindiName: String(row[dataMap.hindiName] || "").trim() || masterInfo.hindiName,
         adharNumber: String(row[dataMap.adharNumber] || "").trim(),
         epicNumber: String(row[dataMap.epicNumber] || "").trim(),
         panNumber: String(row[dataMap.panNumber] || "").trim(),
@@ -160,12 +161,14 @@ function handleSave(data, sheetData, sheetList) {
     statusMsg = "New record saved successfully!";
   }
 
-  // Mandatory Sync of Hindi Name to Master List
+  // Update Hindi Name in Master List too
   const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   for (let i = 1; i < listValues.length; i++) {
     if (String(listValues[i][listMap.hrmsId]).trim() === hrmsIdStr) {
-      sheetList.getRange(i + 1, (listMap.hindiName || 2) + 1).setValue(data.hindiName);
+      if (listMap.hindiName !== undefined) {
+        sheetList.getRange(i + 1, listMap.hindiName + 1).setValue(data.hindiName);
+      }
       break;
     }
   }
