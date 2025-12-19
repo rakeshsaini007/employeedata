@@ -37,7 +37,7 @@ function doPost(e) {
 }
 
 /**
- * Maps headers to column indices dynamically
+ * Maps headers to column indices dynamically with better variation handling
  */
 function getHeaderMap(sheet) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -52,9 +52,9 @@ function getHeaderMap(sheet) {
     if (h.includes("posting office") || h.includes("office")) map.postingOffice = index;
     if (h.includes("udise code") || h.includes("udise")) map.udiseCode = index;
     if (h.includes("adhar") || h.includes("aadhar")) map.adharNumber = index;
-    if (h.includes("epic")) map.epicNumber = index;
+    if (h.includes("epic") || h.includes("voter")) map.epicNumber = index;
     if (h.includes("pan")) map.panNumber = index;
-    if (h.includes("mobile")) map.mobileNumber = index;
+    if (h.includes("mobile") || h.includes("phone")) map.mobileNumber = index;
     if (h.includes("gmail") || h.includes("email")) map.gmailId = index;
     if (h.includes("photo")) map.photo = index;
   });
@@ -85,7 +85,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     throw new Error("Authentication Failed: Date of Birth mismatch.");
   }
 
-  // Basic master info from List sheet
+  // Basic master info from Master "List" sheet
   const masterInfo = {
     hrmsId: String(listRow[listMap.hrmsId] || "").trim(),
     employeeName: String(listRow[listMap.employeeName] || "").trim(),
@@ -96,21 +96,23 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     udiseCode: String(listRow[listMap.udiseCode] || "").trim()
   };
 
+  // Fetch all existing record data from "Data" sheet
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   
   let existingData = null;
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
+    if (String(dataValues[i][dataMap.hrmsId]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       existingData = {
-        hindiName: String(row[dataMap.hindiName] || masterInfo.hindiName).trim(),
-        adharNumber: String(row[dataMap.adharNumber] || "").trim(),
-        epicNumber: String(row[dataMap.epicNumber] || "").trim(),
-        panNumber: String(row[dataMap.panNumber] || "").trim(),
-        mobileNumber: String(row[dataMap.mobileNumber] || "").trim(),
-        gmailId: String(row[dataMap.gmailId] || "").trim(),
-        photo: String(row[dataMap.photo] || "")
+        // Hindi Name from Data sheet prioritized if user previously corrected/updated it
+        hindiName: (dataMap.hindiName !== undefined && row[dataMap.hindiName]) ? String(row[dataMap.hindiName]).trim() : masterInfo.hindiName,
+        adharNumber: (dataMap.adharNumber !== undefined) ? String(row[dataMap.adharNumber] || "").trim() : "",
+        epicNumber: (dataMap.epicNumber !== undefined) ? String(row[dataMap.epicNumber] || "").trim() : "",
+        panNumber: (dataMap.panNumber !== undefined) ? String(row[dataMap.panNumber] || "").trim() : "",
+        mobileNumber: (dataMap.mobileNumber !== undefined) ? String(row[dataMap.mobileNumber] || "").trim() : "",
+        gmailId: (dataMap.gmailId !== undefined) ? String(row[dataMap.gmailId] || "").trim() : "",
+        photo: (dataMap.photo !== undefined) ? String(row[dataMap.photo] || "") : ""
       };
       break;
     }
@@ -135,8 +137,7 @@ function handleSave(data, sheetData, sheetList) {
     }
   }
 
-  const rowData = [];
-  // Build row based on map to ensure correct columns
+  // Ensure row columns match headers
   const maxCol = Math.max(...Object.values(dataMap)) + 1;
   const newRow = new Array(maxCol).fill("");
   
@@ -163,7 +164,7 @@ function handleSave(data, sheetData, sheetList) {
     statusMsg = "New record saved successfully!";
   }
 
-  // Update Hindi Name in Master List too
+  // Sync Hindi Name back to Master List for consistency
   const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   for (let i = 1; i < listValues.length; i++) {

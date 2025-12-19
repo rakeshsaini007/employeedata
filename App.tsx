@@ -112,7 +112,7 @@ function App() {
       setData(response.data);
       setIsExisting(response.exists || false);
       setStep('form');
-      setToast({ message: response.exists ? 'Existing Records Synced' : 'Master Data Fetched', type: 'success' });
+      setToast({ message: response.exists ? 'System Records Auto-Fetched' : 'Master List Identified', type: 'success' });
     } else {
       setToast({ message: response.message || 'Verification Failed', type: 'error' });
     }
@@ -244,7 +244,7 @@ function App() {
               </button>
               <div className="flex items-center gap-4 bg-slate-950 text-white px-8 py-4 rounded-2xl font-black shadow-2xl">
                 <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                <span className="tracking-widest uppercase text-sm">ENCRYPTED SESSION: {data.hrmsId}</span>
+                <span className="tracking-widest uppercase text-sm">SECURE SESSION: {data.hrmsId}</span>
               </div>
             </div>
 
@@ -275,7 +275,7 @@ function App() {
                           <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">FULL NAME</p>
                           <h3 className="text-3xl font-black text-white leading-tight uppercase">{data.employeeName}</h3>
                           <div className="mt-4 flex flex-col gap-1">
-                            <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">REGIONAL IDENTIFIER</p>
+                            <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">HINDI IDENTIFIER (AUTO-FETCHED)</p>
                             <p className="text-2xl font-bold text-indigo-400 font-hindi bg-white/5 inline-block px-4 py-2 rounded-xl border border-white/10">
                                 {data.hindiName || '---'}
                             </p>
@@ -318,19 +318,19 @@ function App() {
                       <Edit className="w-8 h-8 text-indigo-400" />
                     </div>
                     <div>
-                      <h2 className="text-4xl font-black text-slate-950 tracking-tight">System Records</h2>
-                      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Personnel Information Update</p>
+                      <h2 className="text-4xl font-black text-slate-950 tracking-tight">Personnel Records</h2>
+                      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Cloud Database Synchronization</p>
                     </div>
                   </div>
 
                   {/* READ-ONLY SYSTEM DATA */}
                   <div className="mb-16">
                     <div className="flex items-center gap-2 text-slate-950 font-black text-xs uppercase tracking-widest mb-6">
-                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> SECURELY FETCHED MASTER DATA
+                       <CheckCircle2 className="w-4 h-4 text-emerald-600" /> VERIFIED MASTER LIST PROFILE
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-[3rem] border-2 border-slate-100">
                       <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Office of Posting</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Current Posting</label>
                         <div className="bg-white px-6 py-5 rounded-[1.5rem] border-2 border-slate-100 text-slate-900 font-bold flex items-center gap-4 shadow-sm select-none">
                           <Building2 className="w-6 h-6 text-indigo-500" />
                           <span className="text-sm font-black">{data.postingOffice || "N/A"}</span>
@@ -359,7 +359,7 @@ function App() {
                           ) : (
                             <div className="text-slate-200 flex flex-col items-center gap-2">
                               <UserCheck className="w-16 h-16" />
-                              <span className="text-[10px] font-black uppercase tracking-widest">NO ASSET</span>
+                              <span className="text-[10px] font-black uppercase tracking-widest">NO PHOTO</span>
                             </div>
                           )}
                         </div>
@@ -371,10 +371,10 @@ function App() {
                       </div>
                       <div className="flex-1 w-full space-y-6">
                         <p className="text-sm text-slate-500 font-bold leading-relaxed">
-                          Please upload a clear, high-resolution portrait. If already uploaded, it is securely stored in our cloud.
+                          Personnel identity photo is auto-fetched if previously saved. New uploads will overwrite existing assets in the cloud.
                         </p>
                         <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-4 px-8 py-6 bg-slate-950 text-white rounded-[1.8rem] font-black text-lg hover:bg-indigo-700 shadow-2xl shadow-indigo-100 transition-all active:scale-95">
-                          <Upload className="w-6 h-6" /> {data.photo ? 'REPLACE IDENTITY PHOTO' : 'CHOOSE IDENTITY PHOTO'}
+                          <Upload className="w-6 h-6" /> {data.photo ? 'REPLACE CLOUD PHOTO' : 'UPLOAD PHOTO'}
                         </button>
                         <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handlePhotoChange} />
                         {errors.photo && <p className="text-xs text-red-600 font-black uppercase tracking-widest text-center md:text-left">{errors.photo}</p>}
@@ -386,7 +386,7 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
                     <div className="md:col-span-2 mb-8">
                       <div className="flex items-center gap-3 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL IDENTIFICATION
+                         <Type className="w-4 h-4 text-indigo-600" /> REGIONAL HINDI IDENTIFICATION (AUTO-FETCHED)
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
@@ -402,42 +402,42 @@ function App() {
                           isValid={!!data.hindiName && !errors.hindiName}
                           className="font-hindi text-2xl font-bold py-5 border-none focus:ring-0 shadow-none bg-transparent"
                         />
-                        {data.hindiName && <span className="absolute top-8 right-12 text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Auto-Fetched</span>}
+                        {data.hindiName && <span className="absolute top-8 right-12 text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Fetched from Cloud</span>}
                       </div>
                     </div>
 
                     <div className="md:col-span-2 mb-8 mt-4">
                       <div className="flex items-center gap-3 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <CreditCard className="w-4 h-4 text-indigo-600" /> STATUTORY REGISTRATIONS
+                         <CreditCard className="w-4 h-4 text-indigo-600" /> STATUTORY REGISTRATIONS (AUTO-FETCHED)
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
-                    <div className="relative">
+                    <div className="relative group">
                       <Input label="AADHAR CARD (12 DIGITS)" name="adharNumber" value={data.adharNumber} onChange={handleChange} placeholder="0000 0000 0000" maxLength={12} error={errors.adharNumber} isValid={!!data.adharNumber && !errors.adharNumber} />
-                      {data.adharNumber && !errors.adharNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                      {data.adharNumber && !errors.adharNumber && isExisting && <span className="absolute top-1.5 right-12 text-[8px] font-black text-emerald-600 opacity-60 uppercase tracking-[0.2em] pointer-events-none">Cloud Synced</span>}
                     </div>
-                    <div className="relative">
+                    <div className="relative group">
                       <Input label="PAN CARD (ALPHANUMERIC)" name="panNumber" value={data.panNumber} onChange={handleChange} placeholder="ABCDE1234F" maxLength={10} error={errors.panNumber} isValid={!!data.panNumber && !errors.panNumber} />
-                      {data.panNumber && !errors.panNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                      {data.panNumber && !errors.panNumber && isExisting && <span className="absolute top-1.5 right-12 text-[8px] font-black text-emerald-600 opacity-60 uppercase tracking-[0.2em] pointer-events-none">Cloud Synced</span>}
                     </div>
-                    <div className="md:col-span-2 relative">
+                    <div className="md:col-span-2 relative group">
                        <Input label="VOTER ID (EPIC) NUMBER" name="epicNumber" value={data.epicNumber} onChange={handleChange} placeholder="ID Card Alpha-Num" error={errors.epicNumber} isValid={!!data.epicNumber && !errors.epicNumber} />
-                       {data.epicNumber && !errors.epicNumber && isExisting && <span className="absolute top-2 right-12 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                       {data.epicNumber && !errors.epicNumber && isExisting && <span className="absolute top-1.5 right-14 text-[8px] font-black text-emerald-600 opacity-60 uppercase tracking-[0.2em] pointer-events-none">Cloud Synced</span>}
                     </div>
 
                     <div className="md:col-span-2 mt-10 mb-8">
                       <div className="flex items-center gap-3 text-slate-950 font-black text-xs uppercase tracking-widest">
-                         <Smartphone className="w-4 h-4 text-indigo-600" /> COMMUNICATION CHANNELS
+                         <Smartphone className="w-4 h-4 text-indigo-600" /> CONTACT CHANNELS
                       </div>
                       <div className="h-0.5 w-full bg-slate-100 mt-4"></div>
                     </div>
-                    <div className="relative">
-                      <Input label="MOBILE NUMBER" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digit Primary" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
-                      {data.mobileNumber && !errors.mobileNumber && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    <div className="relative group">
+                      <Input label="MOBILE NUMBER" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} placeholder="10 Digit Indian Mobile" maxLength={10} error={errors.mobileNumber} isValid={!!data.mobileNumber && !errors.mobileNumber} />
+                      {data.mobileNumber && !errors.mobileNumber && isExisting && <span className="absolute top-1.5 right-12 text-[8px] font-black text-emerald-600 opacity-60 uppercase tracking-[0.2em] pointer-events-none">Cloud Synced</span>}
                     </div>
-                    <div className="relative">
-                      <Input label="OFFICIAL GMAIL ADDRESS" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="user@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
-                      {data.gmailId && !errors.gmailId && isExisting && <span className="absolute top-2 right-4 text-[8px] font-black text-emerald-600 opacity-50 uppercase tracking-widest">Synced</span>}
+                    <div className="relative group">
+                      <Input label="GMAIL ADDRESS (@GMAIL.COM)" name="gmailId" value={data.gmailId} onChange={handleChange} placeholder="username@gmail.com" error={errors.gmailId} isValid={!!data.gmailId && !errors.gmailId} />
+                      {data.gmailId && !errors.gmailId && isExisting && <span className="absolute top-1.5 right-12 text-[8px] font-black text-emerald-600 opacity-60 uppercase tracking-[0.2em] pointer-events-none">Cloud Synced</span>}
                     </div>
                   </div>
 
@@ -452,9 +452,9 @@ function App() {
                       ) : (
                         <>
                           {isExisting ? (
-                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> UPDATE SECURE RECORD</>
+                            <><RefreshCw className="w-7 h-7 group-hover:rotate-180 transition-transform duration-700" /> UPDATE RECORD</>
                           ) : (
-                            <><Save className="w-7 h-7 group-hover:scale-125 transition-transform" /> SAVE NEW RECORD</>
+                            <><Save className="w-7 h-7 group-hover:scale-125 transition-transform" /> INITIALIZE RECORD</>
                           )}
                           <ChevronRight className="w-7 h-7 group-hover:translate-x-2 transition-transform" />
                         </>
@@ -469,8 +469,8 @@ function App() {
       </div>
 
       <footer className="mt-20 mb-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] text-center leading-loose border-t border-slate-200 pt-10 w-full max-w-4xl">
-        HRMS EXECUTIVE ANALYTICS PORTAL • BUILD V6.4.0<br/>
-        <span className="opacity-50">REAL-TIME DATA SYNC ACTIVE</span>
+        HRMS EXECUTIVE SYNC PORTAL • BUILD V6.5.0<br/>
+        <span className="opacity-50 text-[8px]">STATUTORY DATA AUTO-FETCH PROTOCOL ACTIVE</span>
       </footer>
     </div>
   );
