@@ -37,7 +37,7 @@ function doPost(e) {
 }
 
 /**
- * Maps headers to column indices dynamically with better variation handling
+ * Maps headers to column indices dynamically to ensure robustness against sheet changes
  */
 function getHeaderMap(sheet) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -65,6 +65,7 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
   const hrmsIdStr = String(hrmsId).trim();
   const passwordStr = String(password).trim(); 
 
+  // 1. Verify Authentication against Master List
   const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   let listRow = null;
@@ -85,18 +86,18 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     throw new Error("Authentication Failed: Date of Birth mismatch.");
   }
 
-  // Basic master info from Master "List" sheet
+  // 2. Build profile from Master List
   const masterInfo = {
     hrmsId: String(listRow[listMap.hrmsId] || "").trim(),
     employeeName: String(listRow[listMap.employeeName] || "").trim(),
-    hindiName: String(listRow[listMap.hindiName] || "").trim(), 
+    hindiName: (listMap.hindiName !== undefined) ? String(listRow[listMap.hindiName] || "").trim() : "", 
     designation: String(listRow[listMap.designation] || "").trim(),
     dob: listDob,
     postingOffice: String(listRow[listMap.postingOffice] || "").trim(),
     udiseCode: String(listRow[listMap.udiseCode] || "").trim()
   };
 
-  // Fetch all existing record data from "Data" sheet
+  // 3. Fetch existing data from "Data" sheet if available
   const dataMap = getHeaderMap(sheetData);
   const dataValues = sheetData.getDataRange().getValues();
   
@@ -105,7 +106,6 @@ function handleLogin(hrmsId, password, sheetData, sheetList) {
     if (String(dataValues[i][dataMap.hrmsId]).trim() === hrmsIdStr) {
       const row = dataValues[i];
       existingData = {
-        // Hindi Name from Data sheet prioritized if user previously corrected/updated it
         hindiName: (dataMap.hindiName !== undefined && row[dataMap.hindiName]) ? String(row[dataMap.hindiName]).trim() : masterInfo.hindiName,
         adharNumber: (dataMap.adharNumber !== undefined) ? String(row[dataMap.adharNumber] || "").trim() : "",
         epicNumber: (dataMap.epicNumber !== undefined) ? String(row[dataMap.epicNumber] || "").trim() : "",
@@ -130,41 +130,44 @@ function handleSave(data, sheetData, sheetList) {
   const dataValues = sheetData.getDataRange().getValues();
   let rowIndex = -1;
 
+  // Search for existing row to prevent duplicates
   for (let i = 1; i < dataValues.length; i++) {
-    if (String(dataValues[i][dataMap.hrmsId || 0]).trim() === hrmsIdStr) {
-      rowIndex = i + 1;
+    if (String(dataValues[i][dataMap.hrmsId]).trim() === hrmsIdStr) {
+      rowIndex = i + 1; // Google Sheets is 1-indexed
       break;
     }
   }
 
-  // Ensure row columns match headers
+  // Construct the row array based on detected column indices
   const maxCol = Math.max(...Object.values(dataMap)) + 1;
   const newRow = new Array(maxCol).fill("");
   
-  newRow[dataMap.hrmsId] = "'" + data.hrmsId;
-  newRow[dataMap.employeeName] = data.employeeName;
-  newRow[dataMap.hindiName] = data.hindiName;
-  newRow[dataMap.designation] = data.designation;
-  newRow[dataMap.dob] = data.dob;
-  newRow[dataMap.postingOffice] = data.postingOffice;
-  newRow[dataMap.udiseCode] = data.udiseCode;
-  newRow[dataMap.adharNumber] = "'" + data.adharNumber;
-  newRow[dataMap.epicNumber] = data.epicNumber;
-  newRow[dataMap.panNumber] = data.panNumber;
-  newRow[dataMap.mobileNumber] = "'" + data.mobileNumber;
-  newRow[dataMap.gmailId] = data.gmailId;
+  if (dataMap.hrmsId !== undefined) newRow[dataMap.hrmsId] = "'" + data.hrmsId;
+  if (dataMap.employeeName !== undefined) newRow[dataMap.employeeName] = data.employeeName;
+  if (dataMap.hindiName !== undefined) newRow[dataMap.hindiName] = data.hindiName;
+  if (dataMap.designation !== undefined) newRow[dataMap.designation] = data.designation;
+  if (dataMap.dob !== undefined) newRow[dataMap.dob] = data.dob;
+  if (dataMap.postingOffice !== undefined) newRow[dataMap.postingOffice] = data.postingOffice;
+  if (dataMap.udiseCode !== undefined) newRow[dataMap.udiseCode] = data.udiseCode;
+  if (dataMap.adharNumber !== undefined) newRow[dataMap.adharNumber] = "'" + data.adharNumber;
+  if (dataMap.epicNumber !== undefined) newRow[dataMap.epicNumber] = data.epicNumber;
+  if (dataMap.panNumber !== undefined) newRow[dataMap.panNumber] = data.panNumber;
+  if (dataMap.mobileNumber !== undefined) newRow[dataMap.mobileNumber] = "'" + data.mobileNumber;
+  if (dataMap.gmailId !== undefined) newRow[dataMap.gmailId] = data.gmailId;
   if (dataMap.photo !== undefined) newRow[dataMap.photo] = data.photo || "";
 
   let statusMsg = "";
   if (rowIndex !== -1) {
+    // Update existing row
     sheetData.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
-    statusMsg = "Record updated successfully!";
+    statusMsg = "Profile record successfully updated!";
   } else {
+    // Append new row if not found
     sheetData.appendRow(newRow);
-    statusMsg = "New record saved successfully!";
+    statusMsg = "New profile record initialized successfully!";
   }
 
-  // Sync Hindi Name back to Master List for consistency
+  // Sync Hindi Name to Master List if possible
   const listMap = getHeaderMap(sheetList);
   const listValues = sheetList.getRange(1, 1, sheetList.getLastRow(), sheetList.getLastColumn()).getValues();
   for (let i = 1; i < listValues.length; i++) {
